@@ -83,6 +83,25 @@ func (db *DB) ListUsers() ([]models.User, error) {
 	return users, rows.Err()
 }
 
+func (db *DB) PromoteToSuperAdmin(username string) (*models.User, error) {
+	res, err := db.Exec(
+		`UPDATE users SET is_admin = 1, is_superadmin = 1 WHERE username = ?`,
+		strings.ToLower(username),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("promote user: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return nil, ErrUserNotFound
+	}
+	u, err := db.GetUserByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
 func (db *DB) UpdatePassword(userID int64, newHash string) error {
 	_, err := db.Exec(`UPDATE users SET password_hash = ? WHERE id = ?`, newHash, userID)
 	return err

@@ -174,6 +174,35 @@ func runSeedAdmin(args []string) {
 	fmt.Printf("Admin created: id=%d username=%s\n", user.ID, user.Username)
 }
 
+func runPromote(args []string) {
+	fs := flag.NewFlagSet("promote", flag.ExitOnError)
+	username := fs.String("username", "", "Username to promote to superadmin (required)")
+	dbPath := fs.String("db", "", "SQLite DB path (overrides WYNNMOUNTS_DB)")
+	_ = fs.Parse(args)
+
+	if *username == "" {
+		fmt.Fprintln(os.Stderr, "Usage: promote --username <name>")
+		os.Exit(1)
+	}
+
+	cfg := loadConfig()
+	if *dbPath != "" {
+		cfg.DBPath = *dbPath
+	}
+
+	db, err := database.Open(cfg.DBPath)
+	if err != nil {
+		log.Fatalf("open db: %v", err)
+	}
+	defer db.Close()
+
+	user, err := db.PromoteToSuperAdmin(*username)
+	if err != nil {
+		log.Fatalf("promote: %v", err)
+	}
+	fmt.Printf("Promoted: id=%d username=%s is_superadmin=true\n", user.ID, user.Username)
+}
+
 // pages lists every page template file that needs a layout+content pair.
 var pages = []string{
 	"login.html",
