@@ -95,6 +95,7 @@ func runServe(args []string) {
 		r.Get("/submissions", h.SubmissionsPage)
 		r.Get("/submissions/{id}", h.SubmissionDetailPage)
 		r.Get("/analytics", h.AnalyticsPage)
+		r.Get("/account", h.AccountPage)
 		r.Get("/logout", h.Logout)
 		r.Post("/logout", h.Logout)
 	})
@@ -109,6 +110,7 @@ func runServe(args []string) {
 	r.Group(func(r chi.Router) {
 		r.Use(h.RequireAuthAPI)
 		r.Post("/api/logout", h.APILogout)
+		r.Post("/api/account/password", h.APIChangePassword)
 		r.Get("/api/submissions", h.APIListSubmissions)
 		r.Post("/api/submissions", h.APICreateSubmission)
 		r.Get("/api/submissions/{id}", h.APIGetSubmission)
@@ -179,6 +181,7 @@ var pages = []string{
 	"submission_detail.html",
 	"analytics.html",
 	"admin.html",
+	"account.html",
 }
 
 func loadTemplates() (map[string]*template.Template, error) {

@@ -75,6 +75,11 @@ func (db *DB) ListUsers() ([]models.User, error) {
 	return users, rows.Err()
 }
 
+func (db *DB) UpdatePassword(userID int64, newHash string) error {
+	_, err := db.Exec(`UPDATE users SET password_hash = ? WHERE id = ?`, newHash, userID)
+	return err
+}
+
 func (db *DB) DeleteUser(id int64) error {
 	_, err := db.Exec(`DELETE FROM users WHERE id = ?`, id)
 	return err

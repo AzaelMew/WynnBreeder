@@ -1,0 +1,77 @@
+{{template "layout" .}}
+{{define "content"}}
+<div class="page-header">
+    <h1>Account</h1>
+</div>
+
+<div class="account-wrap" x-data="accountPage()">
+    <section class="section account-section">
+        <h2>Change Password</h2>
+        <div class="account-form">
+            <div class="form-group">
+                <label for="current">Current Password</label>
+                <input type="password" id="current" x-model="current" class="input" autocomplete="current-password">
+            </div>
+            <div class="form-group">
+                <label for="newpw">New Password</label>
+                <input type="password" id="newpw" x-model="newpw" class="input" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label for="confirm">Confirm New Password</label>
+                <input type="password" id="confirm" x-model="confirm" class="input" autocomplete="new-password">
+            </div>
+            <template x-if="error">
+                <div class="alert alert-error" x-text="error"></div>
+            </template>
+            <template x-if="success">
+                <div class="alert alert-success">Password changed successfully.</div>
+            </template>
+            <button class="btn btn-primary" :disabled="submitting" @click="submit()">
+                <span x-text="submitting ? 'Saving...' : 'Change Password'"></span>
+            </button>
+        </div>
+    </section>
+</div>
+
+<script>
+function accountPage() {
+    return {
+        current: '', newpw: '', confirm: '',
+        submitting: false, error: null, success: false,
+
+        async submit() {
+            this.error = null;
+            this.success = false;
+            if (!this.current || !this.newpw || !this.confirm) {
+                this.error = 'All fields are required.'; return;
+            }
+            if (this.newpw !== this.confirm) {
+                this.error = 'New passwords do not match.'; return;
+            }
+            if (this.newpw.length < 8) {
+                this.error = 'New password must be at least 8 characters.'; return;
+            }
+            this.submitting = true;
+            try {
+                const res = await fetch('/api/account/password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current: this.current, new: this.newpw }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.error = data.error || 'Failed to change password.';
+                } else {
+                    this.success = true;
+                    this.current = ''; this.newpw = ''; this.confirm = '';
+                }
+            } catch (e) {
+                this.error = 'Network error: ' + e.message;
+            } finally {
+                this.submitting = false;
+            }
+        }
+    }
+}
+</script>
+{{end}}

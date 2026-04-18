@@ -110,3 +110,46 @@ func (h *Handler) APILogout(w http.ResponseWriter, r *http.Request) {
 }
 
 var _ = database.ErrUserNotFound // keep import used
+
+func (h *Handler) AccountPage(w http.ResponseWriter, r *http.Request) {
+	h.render(w, r, "account.html", PageData{Title: "Account"})
+}
+
+func (h *Handler) APIChangePassword(w http.ResponseWriter, r *http.Request) {
+	user := UserFromContext(r.Context())
+
+	var req struct {
+		Current string `json:"current"`
+		New     string `json:"new"`
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		jsonError(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	if len(req.New) < 8 {
+		jsonError(w, "new password must be at least 8 characters", http.StatusBadRequest)
+		return
+	}
+
+	// Re-fetch to get password hash (context user doesn't carry it)
+	full, err := h.DB.GetUserByID(user.ID)
+	if err != nil {
+		jsonError(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(full.PasswordHash), []byte(req.Current)); err != nil {
+		jsonError(w, "current password is incorrect", http.StatusUnauthorized)
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.New), bcrypt.DefaultCost)
+	if err != nil {
+		jsonError(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	if err := h.DB.UpdatePassword(user.ID, string(hash)); err != nil {
+		jsonError(w, "db error", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, map[string]bool{"ok": true})
+}

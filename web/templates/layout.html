@@ -19,7 +19,7 @@
             <a href="/submissions" class="nav-link">Submissions</a>
             <a href="/analytics" class="nav-link">Analytics</a>
             {{if .User.IsAdmin}}<a href="/admin" class="nav-link nav-admin">Admin</a>{{end}}
-            <span class="nav-user">{{.User.Username}}</span>
+            <a href="/account" class="nav-user">{{.User.Username}}</a>
             <form method="POST" action="/logout" style="display:inline">
                 <button type="submit" class="btn btn-sm btn-ghost">Logout</button>
             </form>
