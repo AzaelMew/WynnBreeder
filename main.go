@@ -25,7 +25,7 @@ var webFS embed.FS
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "Usage: %s <serve|seed-admin> [flags]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s <serve|seed-admin|promote> [flags]\n", os.Args[0])
 		os.Exit(1)
 	}
 
@@ -34,6 +34,8 @@ func main() {
 		runServe(os.Args[2:])
 	case "seed-admin":
 		runSeedAdmin(os.Args[2:])
+	case "promote":
+		runPromote(os.Args[2:])
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", os.Args[1])
 		os.Exit(1)
