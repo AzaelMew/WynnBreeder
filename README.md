@@ -13,7 +13,7 @@ A self-hosted web app for tracking Wynncraft mount breeding data. Submit Parent 
 
 ## Requirements
 
-- Go 1.21+ (for self-build) **or** Docker
+- Go 1.26.2+ (for self-build) **or** Docker
 
 ## Setup
 
