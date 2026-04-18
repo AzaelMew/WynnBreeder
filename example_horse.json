@@ -1,0 +1,52 @@
+{
+    "type": "horse",
+    "potential": 473,
+    "color": "Gray-Night",
+    "name": "1",
+    "energy": {
+        "value": 198,
+        "maxValue": 269
+    },
+    "stats": {
+        "speed": {
+            "value": 39,
+            "limit": 39,
+            "maxValue": 58
+        },
+        "acceleration": {
+            "value": 28,
+            "limit": 41,
+            "maxValue": 61
+        },
+        "altitude": {
+            "value": 38,
+            "limit": 40,
+            "maxValue": 61
+        },
+        "energy": {
+            "value": 40,
+            "limit": 42,
+            "maxValue": 56
+        },
+        "handling": {
+            "value": 35,
+            "limit": 40,
+            "maxValue": 57
+        },
+        "toughness": {
+            "value": 37,
+            "limit": 41,
+            "maxValue": 60
+        },
+        "boost": {
+            "value": 37,
+            "limit": 37,
+            "maxValue": 59
+        },
+        "training": {
+            "value": 38,
+            "limit": 38,
+            "maxValue": 61
+        }
+    }
+}

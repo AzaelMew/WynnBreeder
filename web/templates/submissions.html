@@ -1,0 +1,77 @@
+{{template "layout" .}}
+{{define "content"}}
+{{$data := .Data}}
+{{$page := index $data "Page"}}
+{{$total := index $data "Total"}}
+{{$totalPages := index $data "TotalPages"}}
+{{$subs := index $data "Submissions"}}
+
+<div class="page-header">
+    <h1>Submissions <span class="count-badge">{{$total}}</span></h1>
+    <a href="/submit" class="btn btn-primary">+ New</a>
+</div>
+
+{{if $subs}}
+<div class="table-wrap">
+<table class="table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>User</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Notes</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range $subs}}
+        <tr>
+            <td><a href="/submissions/{{.ID}}">#{{.ID}}</a></td>
+            <td>{{.Username}}</td>
+            <td>{{if eq .Status "pending"}}<span class="badge badge-pending">In Progress</span>{{else}}<span class="badge badge-complete">Complete</span>{{end}}</td>
+            <td>{{.CreatedAt.Format "Jan 2, 2006 15:04"}}</td>
+            <td class="notes-cell">{{if .Notes}}{{.Notes}}{{else}}<span class="muted">—</span>{{end}}</td>
+            <td class="row-actions">
+                <a href="/submissions/{{.ID}}" class="btn btn-sm btn-ghost">View</a>
+                {{if $.User}}{{if $.User.IsAdmin}}
+                <button class="btn btn-sm btn-danger" onclick="deleteSub({{.ID}}, this)">Delete</button>
+                {{end}}{{end}}
+            </td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+</div>
+
+{{if gt $totalPages 1}}
+<div class="pagination">
+    {{if gt $page 1}}
+    <a href="/submissions?page={{sub $page 1}}" class="btn btn-sm btn-ghost">← Prev</a>
+    {{end}}
+    <span class="page-info">Page {{$page}} of {{$totalPages}}</span>
+    {{if lt $page $totalPages}}
+    <a href="/submissions?page={{add $page 1}}" class="btn btn-sm btn-ghost">Next →</a>
+    {{end}}
+</div>
+{{end}}
+
+{{else}}
+<p class="empty-msg">No submissions yet. <a href="/submit">Submit the first one!</a></p>
+{{end}}
+
+<script>
+async function deleteSub(id, btn) {
+    if (!confirm('Delete submission #' + id + '? This cannot be undone.')) return;
+    btn.disabled = true;
+    const res = await fetch('/api/submissions/' + id, { method: 'DELETE' });
+    if (res.ok) {
+        btn.closest('tr').remove();
+    } else {
+        const d = await res.json();
+        alert('Error: ' + (d.error || 'unknown'));
+        btn.disabled = false;
+    }
+}
+</script>
+{{end}}

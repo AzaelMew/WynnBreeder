@@ -1,0 +1,248 @@
+{{template "layout" .}}
+{{define "content"}}
+<div class="page-header">
+    <h1>Submit Breeding Data</h1>
+</div>
+
+<div x-data="submitForm()" class="submit-wrap">
+    <div class="mount-import-grid">
+
+        <!-- Parent A -->
+        <div class="mount-import-slot">
+            <div class="slot-header">
+                <span class="slot-label slot-parent-a">Parent A</span>
+                <div class="slot-actions" x-show="!mounts.parent_a">
+                    <button class="btn btn-sm btn-outline" @click="pasteMount('parent_a')">Paste from Clipboard</button>
+                </div>
+                <button x-show="mounts.parent_a" class="btn btn-sm btn-ghost" @click="clearMount('parent_a')">✕ Clear</button>
+            </div>
+            <template x-if="!mounts.parent_a">
+                <textarea
+                    class="paste-area"
+                    placeholder="Paste JSON here (Ctrl+V)..."
+                    @input="parseMount($event.target.value, 'parent_a'); $event.target.value = mounts.parent_a ? '' : $event.target.value"
+                    @paste="onPaste($event, 'parent_a')"
+                    spellcheck="false"
+                    rows="4"
+                ></textarea>
+            </template>
+            <template x-if="mounts.parent_a">
+                <div x-html="mountCard(mounts.parent_a, 'parent_a')"></div>
+            </template>
+            <template x-if="errors.parent_a">
+                <div class="alert alert-error" x-text="errors.parent_a"></div>
+            </template>
+        </div>
+
+        <!-- Parent B -->
+        <div class="mount-import-slot">
+            <div class="slot-header">
+                <span class="slot-label slot-parent-b">Parent B</span>
+                <div class="slot-actions" x-show="!mounts.parent_b">
+                    <button class="btn btn-sm btn-outline" @click="pasteMount('parent_b')">Paste from Clipboard</button>
+                </div>
+                <button x-show="mounts.parent_b" class="btn btn-sm btn-ghost" @click="clearMount('parent_b')">✕ Clear</button>
+            </div>
+            <template x-if="!mounts.parent_b">
+                <textarea
+                    class="paste-area"
+                    placeholder="Paste JSON here (Ctrl+V)..."
+                    @input="parseMount($event.target.value, 'parent_b'); $event.target.value = mounts.parent_b ? '' : $event.target.value"
+                    @paste="onPaste($event, 'parent_b')"
+                    spellcheck="false"
+                    rows="4"
+                ></textarea>
+            </template>
+            <template x-if="mounts.parent_b">
+                <div x-html="mountCard(mounts.parent_b, 'parent_b')"></div>
+            </template>
+            <template x-if="errors.parent_b">
+                <div class="alert alert-error" x-text="errors.parent_b"></div>
+            </template>
+        </div>
+
+        <!-- Offspring -->
+        <div class="mount-import-slot">
+            <div class="slot-header">
+                <span class="slot-label slot-offspring">Offspring</span>
+                <span class="slot-optional muted">(optional — add later)</span>
+                <div class="slot-actions" x-show="!mounts.offspring">
+                    <button class="btn btn-sm btn-outline" @click="pasteMount('offspring')">Paste from Clipboard</button>
+                </div>
+                <button x-show="mounts.offspring" class="btn btn-sm btn-ghost" @click="clearMount('offspring')">✕ Clear</button>
+            </div>
+            <template x-if="!mounts.offspring">
+                <textarea
+                    class="paste-area"
+                    placeholder="Paste JSON here (Ctrl+V)..."
+                    @input="parseMount($event.target.value, 'offspring'); $event.target.value = mounts.offspring ? '' : $event.target.value"
+                    @paste="onPaste($event, 'offspring')"
+                    spellcheck="false"
+                    rows="4"
+                ></textarea>
+            </template>
+            <template x-if="mounts.offspring">
+                <div x-html="mountCard(mounts.offspring, 'offspring')"></div>
+            </template>
+            <template x-if="errors.offspring">
+                <div class="alert alert-error" x-text="errors.offspring"></div>
+            </template>
+        </div>
+    </div>
+
+    <div class="submit-footer">
+        <div class="form-group notes-group">
+            <label for="notes">Notes (optional)</label>
+            <input type="text" id="notes" x-model="notes" class="input" placeholder="Any observations...">
+        </div>
+        <div class="submit-actions">
+            <template x-if="submitError">
+                <div class="alert alert-error" x-text="submitError"></div>
+            </template>
+            <template x-if="submitSuccess">
+                <div class="alert alert-success">
+                    Saved! <a :href="'/submissions/' + submitSuccess.id">
+                        <span x-text="submitSuccess.status === 'pending' ? 'View in-progress breeding #' + submitSuccess.id : 'View submission #' + submitSuccess.id"></span>
+                    </a>
+                </div>
+            </template>
+            <div class="submit-btn-row">
+                <button
+                    class="btn btn-outline btn-lg"
+                    :disabled="!parentsLoaded() || submitting"
+                    @click="submit(false)"
+                    title="Save parents now, add offspring later"
+                >
+                    <span x-text="submitting ? 'Saving...' : 'Save Parents (breed in progress)'"></span>
+                </button>
+                <button
+                    class="btn btn-primary btn-lg"
+                    :disabled="!allLoaded() || submitting"
+                    @click="submit(true)"
+                >
+                    <span x-text="submitting ? 'Submitting...' : 'Submit Complete Breeding'"></span>
+                </button>
+            </div>
+            <p class="submit-hint">
+                <span x-show="!parentsLoaded()">Paste Parent A and Parent B to continue</span>
+                <span x-show="parentsLoaded() && !allLoaded()">Paste Offspring to submit complete — or save parents now and add offspring later</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function submitForm() {
+    return {
+        mounts: { parent_a: null, parent_b: null, offspring: null },
+        errors: { parent_a: null, parent_b: null, offspring: null },
+        notes: '',
+        submitting: false,
+        submitError: null,
+        submitSuccess: null,
+
+        parentsLoaded() { return this.mounts.parent_a && this.mounts.parent_b; },
+        allLoaded() { return this.mounts.parent_a && this.mounts.parent_b && this.mounts.offspring; },
+
+        clearMount(role) {
+            this.mounts[role] = null;
+            this.errors[role] = null;
+        },
+
+        // Called from textarea @paste event — gets the pasted text before it renders
+        onPaste(event, role) {
+            event.preventDefault();
+            const text = event.clipboardData.getData('text');
+            this.parseMount(text, role);
+        },
+
+        // Called from clipboard API button
+        async pasteMount(role) {
+            try {
+                const text = await navigator.clipboard.readText();
+                this.parseMount(text, role);
+            } catch (e) {
+                this.errors[role] = 'Clipboard read failed — try pasting manually into the text area (Ctrl+V).';
+            }
+        },
+
+        parseMount(text, role) {
+            if (!text || !text.trim()) return;
+            this.errors[role] = null;
+            try {
+                const data = JSON.parse(text.trim());
+                if (!data.type || !data.color || data.potential === undefined) {
+                    throw new Error('Missing required fields (type, color, potential)');
+                }
+                if (!data.stats || Object.keys(data.stats).length < 8) {
+                    throw new Error('Incomplete stats — expected 8 stat fields');
+                }
+                this.mounts[role] = data;
+            } catch (e) {
+                this.errors[role] = 'Invalid JSON: ' + e.message;
+                this.mounts[role] = null;
+            }
+        },
+
+        mountCard(m, role) {
+            const stats = [
+                ['Speed', m.stats?.speed], ['Acceleration', m.stats?.acceleration],
+                ['Altitude', m.stats?.altitude], ['Energy', m.stats?.energy],
+                ['Handling', m.stats?.handling], ['Toughness', m.stats?.toughness],
+                ['Boost', m.stats?.boost], ['Training', m.stats?.training],
+            ];
+            const roleColors = { parent_a: '#4a9eff', parent_b: '#ff9f4a', offspring: '#4aff9f' };
+            const borderColor = roleColors[role] || '#888';
+            const energyPct = m.energy ? Math.round(m.energy.value / m.energy.maxValue * 100) : 0;
+            let rows = stats.map(([name, s]) => {
+                if (!s) return '';
+                const valPct = Math.round(s.value / s.maxValue * 100);
+                const limPct = Math.round(s.limit / s.maxValue * 100);
+                return `<tr>
+                    <td class="stat-name">${name}</td>
+                    <td class="stat-nums">${s.value}<span class="stat-sep">/</span>${s.limit}<span class="stat-sep">/</span>${s.maxValue}</td>
+                    <td class="stat-bar-cell"><div class="stat-bar-bg">
+                        <div class="stat-bar-fill" style="width:${valPct}%"></div>
+                        <div class="stat-bar-limit" style="left:${limPct}%"></div>
+                    </div></td></tr>`;
+            }).join('');
+            return `<div class="mount-card" style="border-color:${borderColor}">
+                <div class="mount-card-header"><span class="mount-name">${m.name||'—'}</span><span class="mount-color">${m.color}</span></div>
+                <div class="mount-meta"><span class="mount-type">${m.type}</span><span class="mount-potential">Potential: ${m.potential}</span></div>
+                <div class="mount-energy"><span>Energy: ${m.energy?.value??'?'}/${m.energy?.maxValue??'?'}</span>
+                    <div class="stat-bar-bg small"><div class="stat-bar-fill energy-fill" style="width:${energyPct}%"></div></div>
+                </div>
+                <table class="stat-table"><thead><tr><th>Stat</th><th>Val/Lim/Max</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+            </div>`;
+        },
+
+        async submit(includeOffspring) {
+            this.submitting = true;
+            this.submitError = null;
+            this.submitSuccess = null;
+            try {
+                const body = { parent_a: this.mounts.parent_a, parent_b: this.mounts.parent_b, notes: this.notes };
+                if (includeOffspring && this.mounts.offspring) body.offspring = this.mounts.offspring;
+                const res = await fetch('/api/submissions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.submitError = data.error || 'Submission failed';
+                } else {
+                    this.submitSuccess = { id: data.id, status: data.status };
+                    this.mounts = { parent_a: null, parent_b: null, offspring: null };
+                    this.notes = '';
+                }
+            } catch (e) {
+                this.submitError = 'Network error: ' + e.message;
+            } finally {
+                this.submitting = false;
+            }
+        }
+    }
+}
+</script>
+{{end}}

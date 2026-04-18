@@ -1,0 +1,37 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} — WynnMounts</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script defer src="/static/alpine.min.js"></script>
+    <script src="/static/htmx.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="nav-brand">WynnMounts</a>
+        {{if .User}}
+        <div class="nav-links">
+            <a href="/" class="nav-link">Dashboard</a>
+            <a href="/submit" class="nav-link">Submit</a>
+            <a href="/submissions" class="nav-link">Submissions</a>
+            <a href="/analytics" class="nav-link">Analytics</a>
+            {{if .User.IsAdmin}}<a href="/admin" class="nav-link nav-admin">Admin</a>{{end}}
+            <span class="nav-user">{{.User.Username}}</span>
+            <form method="POST" action="/logout" style="display:inline">
+                <button type="submit" class="btn btn-sm btn-ghost">Logout</button>
+            </form>
+        </div>
+        {{end}}
+    </nav>
+    <main class="container">
+        {{if .Flash}}
+        <div class="alert alert-{{.FlashType}}">{{.Flash}}</div>
+        {{end}}
+        {{block "content" .}}{{end}}
+    </main>
+</body>
+</html>
+{{end}}

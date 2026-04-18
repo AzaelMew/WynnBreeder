@@ -1,0 +1,290 @@
+package handlers
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"wynnmounts/database"
+	"wynnmounts/models"
+
+	"github.com/go-chi/chi/v5"
+)
+
+func (h *Handler) SubmitPage(w http.ResponseWriter, r *http.Request) {
+	h.render(w, r, "submit.html", PageData{Title: "Submit Breeding"})
+}
+
+func (h *Handler) SubmissionsPage(w http.ResponseWriter, r *http.Request) {
+	page := queryInt(r, "page", 1)
+	if page < 1 {
+		page = 1
+	}
+	const perPage = 20
+	offset := (page - 1) * perPage
+
+	subs, total, err := h.DB.ListSubmissions(perPage, offset)
+	if err != nil {
+		http.Error(w, "db error", http.StatusInternalServerError)
+		return
+	}
+
+	totalPages := (total + perPage - 1) / perPage
+	h.render(w, r, "submissions.html", PageData{
+		Title: "Submissions",
+		Data: map[string]any{
+			"Submissions": subs,
+			"Total":       total,
+			"Page":        page,
+			"TotalPages":  totalPages,
+		},
+	})
+}
+
+type StatDelta struct {
+	Name      string
+	ParentA   int
+	ParentB   int
+	Avg       float64
+	Offspring int
+	Delta     float64
+}
+
+func computeDeltas(pa, pb, off *models.Mount) []StatDelta {
+	if pa == nil || pb == nil || off == nil {
+		return nil
+	}
+	d := func(name string, a, b, o int) StatDelta {
+		avg := float64(a+b) / 2.0
+		return StatDelta{Name: name, ParentA: a, ParentB: b, Avg: avg, Offspring: o, Delta: float64(o) - avg}
+	}
+	return []StatDelta{
+		d("Speed", pa.SpeedVal, pb.SpeedVal, off.SpeedVal),
+		d("Acceleration", pa.AccelVal, pb.AccelVal, off.AccelVal),
+		d("Altitude", pa.AltitudeVal, pb.AltitudeVal, off.AltitudeVal),
+		d("Energy", pa.EnergyStatVal, pb.EnergyStatVal, off.EnergyStatVal),
+		d("Handling", pa.HandlingVal, pb.HandlingVal, off.HandlingVal),
+		d("Toughness", pa.ToughnessVal, pb.ToughnessVal, off.ToughnessVal),
+		d("Boost", pa.BoostVal, pb.BoostVal, off.BoostVal),
+		d("Training", pa.TrainingVal, pb.TrainingVal, off.TrainingVal),
+		d("Potential", pa.Potential, pb.Potential, off.Potential),
+	}
+}
+
+func (h *Handler) SubmissionDetailPage(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	sub, err := h.DB.GetSubmission(id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	mountMap := map[models.MountRole]*models.Mount{}
+	for i := range sub.Mounts {
+		m := &sub.Mounts[i]
+		mountMap[m.Role] = m
+	}
+
+	pa := mountMap[models.RoleParentA]
+	pb := mountMap[models.RoleParentB]
+	off := mountMap[models.RoleOffspring]
+
+	user := UserFromContext(r.Context())
+	isOwner := user != nil && (user.ID == sub.UserID || user.IsAdmin)
+
+	h.render(w, r, "submission_detail.html", PageData{
+		Title: fmt.Sprintf("Submission #%d", sub.ID),
+		Data: map[string]any{
+			"Submission": sub,
+			"ParentA":    pa,
+			"ParentB":    pb,
+			"Offspring":  off,
+			"Deltas":     computeDeltas(pa, pb, off),
+			"IsOwner":    isOwner,
+		},
+	})
+}
+
+// APICreateSubmission handles POST /api/submissions
+// Offspring is optional — omit it to save a pending (in-progress) breeding.
+func (h *Handler) APICreateSubmission(w http.ResponseWriter, r *http.Request) {
+	user := UserFromContext(r.Context())
+
+	var req models.SubmitRequest
+	if err := decodeJSON(r, &req); err != nil {
+		jsonError(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := validateMountJSON(req.ParentA, "parent_a"); err != nil {
+		jsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := validateMountJSON(req.ParentB, "parent_b"); err != nil {
+		jsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	mounts := []models.Mount{
+		models.MountFromJSON(req.ParentA, 0, models.RoleParentA),
+		models.MountFromJSON(req.ParentB, 0, models.RoleParentB),
+	}
+
+	status := "pending"
+	if req.Offspring != nil {
+		if err := validateMountJSON(*req.Offspring, "offspring"); err != nil {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		mounts = append(mounts, models.MountFromJSON(*req.Offspring, 0, models.RoleOffspring))
+		status = "complete"
+	}
+
+	sub, err := h.DB.CreateSubmission(user.ID, req.Notes, mounts, status)
+	if err != nil {
+		jsonError(w, "db error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, sub)
+}
+
+// APIAddOffspring handles PATCH /api/submissions/:id/offspring
+// Only the owner or an admin may complete a pending submission.
+func (h *Handler) APIAddOffspring(w http.ResponseWriter, r *http.Request) {
+	user := UserFromContext(r.Context())
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		jsonError(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	sub, err := h.DB.GetSubmission(id)
+	if err != nil {
+		jsonError(w, "not found", http.StatusNotFound)
+		return
+	}
+	if !user.IsAdmin && sub.UserID != user.ID {
+		jsonError(w, "forbidden — only the submitter can add offspring", http.StatusForbidden)
+		return
+	}
+
+	var offJSON models.MountJSON
+	if err := decodeJSON(r, &offJSON); err != nil {
+		jsonError(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := validateMountJSON(offJSON, "offspring"); err != nil {
+		jsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	offspring := models.MountFromJSON(offJSON, id, models.RoleOffspring)
+	updated, err := h.DB.AddOffspring(id, offspring)
+	if err != nil {
+		if err == database.ErrSubmissionAlreadyComplete {
+			jsonError(w, "submission already has offspring", http.StatusConflict)
+			return
+		}
+		jsonError(w, "db error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, updated)
+}
+
+// APIListSubmissions handles GET /api/submissions
+func (h *Handler) APIListSubmissions(w http.ResponseWriter, r *http.Request) {
+	page := queryInt(r, "page", 1)
+	if page < 1 {
+		page = 1
+	}
+	const perPage = 20
+	subs, total, err := h.DB.ListSubmissions(perPage, (page-1)*perPage)
+	if err != nil {
+		jsonError(w, "db error", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, map[string]any{"submissions": subs, "total": total, "page": page})
+}
+
+// APIGetSubmission handles GET /api/submissions/:id
+func (h *Handler) APIGetSubmission(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		jsonError(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+	sub, err := h.DB.GetSubmission(id)
+	if err != nil {
+		jsonError(w, "not found", http.StatusNotFound)
+		return
+	}
+	jsonOK(w, sub)
+}
+
+// APIDeleteSubmission handles DELETE /api/submissions/:id
+func (h *Handler) APIDeleteSubmission(w http.ResponseWriter, r *http.Request) {
+	user := UserFromContext(r.Context())
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		jsonError(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	sub, err := h.DB.GetSubmission(id)
+	if err != nil {
+		jsonError(w, "not found", http.StatusNotFound)
+		return
+	}
+	if !user.IsAdmin && sub.UserID != user.ID {
+		jsonError(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	if err := h.DB.DeleteSubmission(id); err != nil {
+		jsonError(w, "db error", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, map[string]bool{"ok": true})
+}
+
+func validateMountJSON(m models.MountJSON, role string) error {
+	if strings.TrimSpace(m.Type) == "" {
+		return fmt.Errorf("%s: missing type", role)
+	}
+	if m.Potential < 0 {
+		return fmt.Errorf("%s: potential must be non-negative", role)
+	}
+	if strings.TrimSpace(m.Color) == "" {
+		return fmt.Errorf("%s: missing color", role)
+	}
+	return nil
+}
+
+func decodeJSON(r *http.Request, v any) error {
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 1MB max
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(body, v)
+}
+
+func queryInt(r *http.Request, key string, def int) int {
+	s := r.URL.Query().Get(key)
+	if s == "" {
+		return def
+	}
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return def
+	}
+	return n
+}
+
+var _ = database.ErrSubmissionNotFound

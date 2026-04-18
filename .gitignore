@@ -1,0 +1,11 @@
+# Database
+*.db
+*.db-wal
+*.db-shm
+data/
+
+# Binary
+wynnmounts
+
+# Go
+vendor/

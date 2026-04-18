@@ -1,0 +1,284 @@
+{{template "layout" .}}
+{{define "content"}}
+{{$data := .Data}}
+{{$sub := index $data "Submission"}}
+{{$pa := index $data "ParentA"}}
+{{$pb := index $data "ParentB"}}
+{{$off := index $data "Offspring"}}
+
+{{$isOwner := index $data "IsOwner"}}
+
+<div class="page-header">
+    <div>
+        <h1>
+            Submission #{{$sub.ID}}
+            {{if eq $sub.Status "pending"}}<span class="badge badge-pending">In Progress</span>{{else}}<span class="badge badge-complete">Complete</span>{{end}}
+        </h1>
+        <p class="sub-meta">by {{$sub.Username}} on {{$sub.CreatedAt.Format "Jan 2, 2006 15:04"}}</p>
+        {{if $sub.Notes}}<p class="sub-notes">{{$sub.Notes}}</p>{{end}}
+    </div>
+    <div class="header-actions">
+        <a href="/submissions" class="btn btn-sm btn-ghost">← Back</a>
+        {{if .User}}{{if .User.IsAdmin}}
+        <button
+            class="btn btn-sm btn-danger"
+            onclick="deleteSubmission({{$sub.ID}})"
+        >Delete</button>
+        {{end}}{{end}}
+    </div>
+</div>
+
+{{if and (eq $sub.Status "pending") $isOwner}}
+<section class="section add-offspring-section" x-data="addOffspring({{$sub.ID}})">
+    <h2>Add Offspring</h2>
+    <p class="section-desc">Breeding finished? Paste the offspring's stats to complete this record.</p>
+    <div class="add-offspring-slot">
+        <div class="slot-header">
+            <span class="slot-label slot-offspring">Offspring</span>
+            <div x-show="!mount" class="slot-actions">
+                <button class="btn btn-sm btn-outline" @click="pasteMount()">Paste from Clipboard</button>
+            </div>
+            <button x-show="mount" class="btn btn-sm btn-ghost" @click="mount = null; loadError = null">✕ Clear</button>
+        </div>
+        <template x-if="!mount">
+            <textarea
+                class="paste-area"
+                placeholder="Paste offspring JSON here (Ctrl+V)..."
+                @paste="onPaste($event)"
+                spellcheck="false"
+                rows="4"
+            ></textarea>
+        </template>
+        <template x-if="mount">
+            <div x-html="mountCard(mount)"></div>
+        </template>
+        <template x-if="loadError">
+            <div class="alert alert-error" x-text="loadError"></div>
+        </template>
+    </div>
+    <div class="add-offspring-footer">
+        <template x-if="submitError">
+            <div class="alert alert-error" x-text="submitError"></div>
+        </template>
+        <button class="btn btn-primary" :disabled="!mount || submitting" @click="submit()">
+            <span x-text="submitting ? 'Saving...' : 'Complete Breeding Record'"></span>
+        </button>
+    </div>
+</section>
+{{end}}
+
+<div class="detail-grid">
+    {{if $pa}}
+    <div class="detail-col">
+        <div class="col-label label-parent-a">Parent A</div>
+        {{template "mountDetail" $pa}}
+    </div>
+    {{end}}
+
+    {{if $pb}}
+    <div class="detail-col">
+        <div class="col-label label-parent-b">Parent B</div>
+        {{template "mountDetail" $pb}}
+    </div>
+    {{end}}
+
+    {{if $off}}
+    <div class="detail-col">
+        <div class="col-label label-offspring">Offspring</div>
+        {{template "mountDetail" $off}}
+    </div>
+    {{end}}
+</div>
+
+{{$deltas := index $data "Deltas"}}
+{{if $deltas}}
+<section class="section delta-section">
+    <h2>Stat Deltas (Offspring vs Parent Average)</h2>
+    <table class="table delta-table">
+        <thead>
+            <tr>
+                <th>Stat</th>
+                <th>Parent A</th>
+                <th>Parent B</th>
+                <th>Avg</th>
+                <th>Offspring</th>
+                <th>Delta</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $deltas}}
+            <tr>
+                <td>{{.Name}}</td>
+                <td class="stat-num">{{.ParentA}}</td>
+                <td class="stat-num">{{.ParentB}}</td>
+                <td class="stat-num muted">{{roundf .Avg}}</td>
+                <td class="stat-num">{{.Offspring}}</td>
+                <td class="stat-num {{if gt .Delta 0.0}}delta-pos{{else if lt .Delta 0.0}}delta-neg{{end}}">{{fmtDelta .Delta}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</section>
+{{end}}
+
+<script>
+async function deleteSubmission(id) {
+    if (!confirm('Delete submission #' + id + '? This cannot be undone.')) return;
+    const res = await fetch('/api/submissions/' + id, { method: 'DELETE' });
+    if (res.ok) {
+        window.location.href = '/submissions';
+    } else {
+        const d = await res.json();
+        alert('Error: ' + (d.error || 'unknown'));
+    }
+}
+
+function addOffspring(submissionId) {
+    return {
+        mount: null,
+        loadError: null,
+        submitting: false,
+        submitError: null,
+
+        onPaste(event) {
+            event.preventDefault();
+            const text = event.clipboardData.getData('text');
+            this.parseMount(text);
+        },
+
+        async pasteMount() {
+            try {
+                const text = await navigator.clipboard.readText();
+                this.parseMount(text);
+            } catch (e) {
+                this.loadError = 'Clipboard read failed — try pasting manually into the text area (Ctrl+V).';
+            }
+        },
+
+        parseMount(text) {
+            if (!text || !text.trim()) return;
+            this.loadError = null;
+            try {
+                const data = JSON.parse(text.trim());
+                if (!data.type || !data.color || data.potential === undefined) {
+                    throw new Error('Missing required fields (type, color, potential)');
+                }
+                if (!data.stats || Object.keys(data.stats).length < 8) {
+                    throw new Error('Incomplete stats — expected 8 stat fields');
+                }
+                this.mount = data;
+            } catch (e) {
+                this.loadError = 'Invalid JSON: ' + e.message;
+                this.mount = null;
+            }
+        },
+
+        mountCard(m) {
+            const stats = [
+                ['Speed', m.stats?.speed], ['Acceleration', m.stats?.acceleration],
+                ['Altitude', m.stats?.altitude], ['Energy', m.stats?.energy],
+                ['Handling', m.stats?.handling], ['Toughness', m.stats?.toughness],
+                ['Boost', m.stats?.boost], ['Training', m.stats?.training],
+            ];
+            const energyPct = m.energy ? Math.round(m.energy.value / m.energy.maxValue * 100) : 0;
+            let rows = stats.map(([name, s]) => {
+                if (!s) return '';
+                const valPct = Math.round(s.value / s.maxValue * 100);
+                const limPct = Math.round(s.limit / s.maxValue * 100);
+                return `<tr>
+                    <td class="stat-name">${name}</td>
+                    <td class="stat-nums">${s.value}<span class="stat-sep">/</span>${s.limit}<span class="stat-sep">/</span>${s.maxValue}</td>
+                    <td class="stat-bar-cell"><div class="stat-bar-bg">
+                        <div class="stat-bar-fill" style="width:${valPct}%"></div>
+                        <div class="stat-bar-limit" style="left:${limPct}%"></div>
+                    </div></td></tr>`;
+            }).join('');
+            return `<div class="mount-card" style="border-color:#4aff9f">
+                <div class="mount-card-header"><span class="mount-name">${m.name||'—'}</span><span class="mount-color">${m.color}</span></div>
+                <div class="mount-meta"><span class="mount-type">${m.type}</span><span class="mount-potential">Potential: ${m.potential}</span></div>
+                <div class="mount-energy"><span>Energy: ${m.energy?.value??'?'}/${m.energy?.maxValue??'?'}</span>
+                    <div class="stat-bar-bg small"><div class="stat-bar-fill energy-fill" style="width:${energyPct}%"></div></div>
+                </div>
+                <table class="stat-table"><thead><tr><th>Stat</th><th>Val/Lim/Max</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+            </div>`;
+        },
+
+        async submit() {
+            this.submitting = true;
+            this.submitError = null;
+            try {
+                const res = await fetch('/api/submissions/' + submissionId + '/offspring', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.mount),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.submitError = data.error || 'Failed to add offspring';
+                } else {
+                    // Reload page to show completed breeding with delta table
+                    window.location.reload();
+                }
+            } catch (e) {
+                this.submitError = 'Network error: ' + e.message;
+            } finally {
+                this.submitting = false;
+            }
+        }
+    };
+}
+</script>
+{{end}}
+
+{{define "mountDetail"}}
+<div class="mount-detail-card">
+    <div class="mount-card-header">
+        <span class="mount-name">{{.Name}}</span>
+        <span class="mount-color">{{.Color}}</span>
+    </div>
+    <div class="mount-meta">
+        <span class="mount-type">{{.Type}}</span>
+        <span class="mount-potential">Potential: {{.Potential}}</span>
+    </div>
+    <div class="mount-energy-row">
+        <span class="energy-label">Energy</span>
+        <span class="energy-vals">{{.EnergyValue}}/{{.EnergyMax}}</span>
+        <div class="stat-bar-bg">
+            <div class="stat-bar-fill energy-fill" style="width:{{pct .EnergyValue .EnergyMax}}%"></div>
+        </div>
+    </div>
+    <table class="stat-table">
+        <thead><tr><th>Stat</th><th>Val</th><th>Lim</th><th>Max</th><th></th></tr></thead>
+        <tbody>
+            {{template "statRow" (args "Speed" .SpeedVal .SpeedLim .SpeedMax)}}
+            {{template "statRow" (args "Accel" .AccelVal .AccelLim .AccelMax)}}
+            {{template "statRow" (args "Altitude" .AltitudeVal .AltitudeLim .AltitudeMax)}}
+            {{template "statRow" (args "Energy" .EnergyStatVal .EnergyStatLim .EnergyStatMax)}}
+            {{template "statRow" (args "Handling" .HandlingVal .HandlingLim .HandlingMax)}}
+            {{template "statRow" (args "Toughness" .ToughnessVal .ToughnessLim .ToughnessMax)}}
+            {{template "statRow" (args "Boost" .BoostVal .BoostLim .BoostMax)}}
+            {{template "statRow" (args "Training" .TrainingVal .TrainingLim .TrainingMax)}}
+        </tbody>
+    </table>
+</div>
+{{end}}
+
+{{define "statRow"}}
+{{$name := index . 0}}
+{{$val := index . 1}}
+{{$lim := index . 2}}
+{{$max := index . 3}}
+<tr>
+    <td class="stat-name">{{$name}}</td>
+    <td class="stat-num">{{$val}}</td>
+    <td class="stat-num stat-lim">{{$lim}}</td>
+    <td class="stat-num stat-max">{{$max}}</td>
+    <td class="stat-bar-cell">
+        <div class="stat-bar-bg">
+            <div class="stat-bar-fill" style="width:{{pct $val $max}}%"></div>
+            <div class="stat-bar-limit" style="left:{{pct $lim $max}}%"></div>
+        </div>
+    </td>
+</tr>
+{{end}}
+

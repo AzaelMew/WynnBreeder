@@ -1,0 +1,173 @@
+{{template "layout" .}}
+{{define "content"}}
+{{$data := .Data}}
+{{$users := index $data "Users"}}
+{{$subs := index $data "Submissions"}}
+{{$totalSubs := index $data "TotalSubs"}}
+
+<div class="page-header">
+    <h1>Admin Panel</h1>
+</div>
+
+<section class="section" x-data="adminPanel()">
+    <div class="section-header">
+        <h2>Users</h2>
+        <button class="btn btn-primary btn-sm" @click="showCreate = !showCreate">+ New User</button>
+    </div>
+
+    <div class="create-user-form" x-show="showCreate" x-cloak>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" x-model="newUser.username" class="input" placeholder="username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" x-model="newUser.password" class="input" placeholder="min 8 chars">
+            </div>
+            <div class="form-group form-group-check">
+                <label>
+                    <input type="checkbox" x-model="newUser.is_admin">
+                    Admin
+                </label>
+            </div>
+        </div>
+        <template x-if="createError">
+            <div class="alert alert-error" x-text="createError"></div>
+        </template>
+        <template x-if="createSuccess">
+            <div class="alert alert-success" x-text="createSuccess"></div>
+        </template>
+        <button class="btn btn-primary" @click="createUser()" :disabled="creating">
+            <span x-text="creating ? 'Creating...' : 'Create User'"></span>
+        </button>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Created</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $users}}
+            <tr>
+                <td>{{.ID}}</td>
+                <td>{{.Username}}</td>
+                <td>{{if .IsAdmin}}<span class="badge badge-admin">Admin</span>{{else}}<span class="badge">User</span>{{end}}</td>
+                <td>{{.CreatedAt.Format "Jan 2, 2006"}}</td>
+                <td>
+                    {{if not .IsAdmin}}
+                    <button
+                        class="btn btn-sm btn-danger"
+                        @click="deleteUser({{.ID}}, '{{.Username}}')"
+                    >Delete</button>
+                    {{end}}
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</section>
+
+<section class="section">
+    <div class="section-header">
+        <h2>Recent Submissions <span class="count-badge">{{$totalSubs}} total</span></h2>
+        <a href="/submissions" class="btn btn-sm btn-ghost">View all</a>
+    </div>
+    {{if $subs}}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>User</th>
+                <th>Date</th>
+                <th>Notes</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $subs}}
+            <tr>
+                <td><a href="/submissions/{{.ID}}">#{{.ID}}</a></td>
+                <td>{{.Username}}</td>
+                <td>{{.CreatedAt.Format "Jan 2, 2006 15:04"}}</td>
+                <td class="notes-cell">{{if .Notes}}{{.Notes}}{{else}}<span class="muted">—</span>{{end}}</td>
+                <td class="row-actions">
+                    <a href="/submissions/{{.ID}}" class="btn btn-sm btn-ghost">View</a>
+                    <button class="btn btn-sm btn-danger" onclick="deleteSub({{.ID}}, this)">Delete</button>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+    {{else}}
+    <p class="empty-msg">No submissions yet.</p>
+    {{end}}
+</section>
+
+<script>
+async function deleteSub(id, btn) {
+    if (!confirm('Delete submission #' + id + '? This cannot be undone.')) return;
+    btn.disabled = true;
+    const res = await fetch('/api/submissions/' + id, { method: 'DELETE' });
+    if (res.ok) {
+        btn.closest('tr').remove();
+    } else {
+        const d = await res.json();
+        alert('Error: ' + (d.error || 'unknown'));
+        btn.disabled = false;
+    }
+}
+
+function adminPanel() {
+    return {
+        showCreate: false,
+        newUser: { username: '', password: '', is_admin: false },
+        creating: false,
+        createError: null,
+        createSuccess: null,
+
+        async createUser() {
+            this.creating = true;
+            this.createError = null;
+            this.createSuccess = null;
+            try {
+                const res = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.newUser),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.createError = data.error || 'Failed to create user';
+                } else {
+                    this.createSuccess = `User "${data.username}" created successfully`;
+                    this.newUser = { username: '', password: '', is_admin: false };
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            } catch (e) {
+                this.createError = 'Network error: ' + e.message;
+            } finally {
+                this.creating = false;
+            }
+        },
+
+        async deleteUser(id, username) {
+            if (!confirm(`Delete user "${username}"? This will also delete all their submissions.`)) return;
+            const res = await fetch('/api/admin/users/' + id, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'unknown'));
+            }
+        }
+    }
+}
+</script>
+{{end}}

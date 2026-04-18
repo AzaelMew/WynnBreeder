@@ -1,0 +1,98 @@
+{{template "layout" .}}
+{{define "content"}}
+{{$data := .Data}}
+{{$statRows := index $data "StatRows"}}
+{{$colorRows := index $data "ColorRows"}}
+{{$potStats := index $data "PotentialStats"}}
+
+<div class="page-header">
+    <h1>Analytics</h1>
+    <span class="muted">Based on all submitted breeding data</span>
+</div>
+
+{{if and $statRows (gt (len $statRows) 0) (gt (index $statRows 0).Count 0)}}
+
+<section class="section">
+    <h2>Stat Inheritance</h2>
+    <p class="section-desc">Average values across all submissions. Delta = Offspring avg − Parent avg.</p>
+    <div class="table-wrap">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Stat</th>
+                <th>Avg Parent A</th>
+                <th>Avg Parent B</th>
+                <th>Avg Parent</th>
+                <th>Avg Offspring</th>
+                <th>Delta</th>
+                <th>n</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $statRows}}
+            <tr>
+                <td>{{.StatName}}</td>
+                <td class="stat-num">{{roundf .AvgParentAVal}}</td>
+                <td class="stat-num">{{roundf .AvgParentBVal}}</td>
+                <td class="stat-num muted">{{roundf .AvgParentAvg}}</td>
+                <td class="stat-num">{{roundf .AvgOffspringVal}}</td>
+                <td class="stat-num {{if gt .Delta 0.0}}delta-pos{{else if lt .Delta 0.0}}delta-neg{{end}}">{{fmtDelta .Delta}}</td>
+                <td class="muted">{{.Count}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+    </div>
+</section>
+
+{{if $potStats}}
+<section class="section">
+    <h2>Potential</h2>
+    <table class="table table-narrow">
+        <thead>
+            <tr><th>Metric</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Avg Parent A Potential</td><td class="stat-num">{{roundf $potStats.AvgParentAPotential}}</td></tr>
+            <tr><td>Avg Parent B Potential</td><td class="stat-num">{{roundf $potStats.AvgParentBPotential}}</td></tr>
+            <tr><td>Avg Offspring Potential</td><td class="stat-num">{{roundf $potStats.AvgOffspringPotential}}</td></tr>
+            <tr><td>Submissions</td><td class="stat-num">{{$potStats.Count}}</td></tr>
+        </tbody>
+    </table>
+</section>
+{{end}}
+
+{{if $colorRows}}
+<section class="section">
+    <h2>Color Inheritance</h2>
+    <div class="table-wrap">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Parent A Color</th>
+                <th>Parent B Color</th>
+                <th>Offspring Color</th>
+                <th>Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $colorRows}}
+            <tr>
+                <td><span class="color-badge">{{.ParentAColor}}</span></td>
+                <td><span class="color-badge">{{.ParentBColor}}</span></td>
+                <td><span class="color-badge">{{.OffspringColor}}</span></td>
+                <td class="stat-num">{{.Count}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+    </div>
+</section>
+{{end}}
+
+{{else}}
+<div class="empty-msg">
+    <p>Not enough data yet. <a href="/submit">Submit some breeding results</a> to see analytics.</p>
+</div>
+{{end}}
+{{end}}

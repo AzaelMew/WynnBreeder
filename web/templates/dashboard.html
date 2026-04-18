@@ -1,0 +1,75 @@
+{{template "layout" .}}
+{{define "content"}}
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <a href="/submit" class="btn btn-primary">+ New Breeding</a>
+</div>
+
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-value">{{(index .Data "TotalSubmissions")}}</div>
+        <div class="stat-label">Total Submissions</div>
+    </div>
+    {{$pending := index .Data "PendingBreedings"}}
+    {{if $pending}}
+    <div class="stat-card stat-card-pending">
+        <div class="stat-value">{{len $pending}}</div>
+        <div class="stat-label">Awaiting Offspring</div>
+    </div>
+    {{end}}
+</div>
+
+{{$pending := index .Data "PendingBreedings"}}
+{{if $pending}}
+<section class="section pending-section">
+    <h2>Your Breedings in Progress</h2>
+    <p class="section-desc">These are waiting for offspring data. Only you can complete them.</p>
+    <div class="pending-grid">
+        {{range $pending}}
+        <div class="pending-card">
+            <div class="pending-card-header">
+                <span class="badge badge-pending">In Progress</span>
+                <span class="pending-date muted">{{.CreatedAt.Format "Jan 2, 2006"}}</span>
+            </div>
+            {{if .Notes}}<p class="pending-notes">{{.Notes}}</p>{{end}}
+            <a href="/submissions/{{.ID}}" class="btn btn-primary btn-sm pending-btn">Add Offspring →</a>
+        </div>
+        {{end}}
+    </div>
+</section>
+{{end}}
+
+<section class="section">
+    <h2>Recent Submissions</h2>
+    {{$subs := index .Data "RecentSubmissions"}}
+    {{if $subs}}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Submitted by</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Notes</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $subs}}
+            <tr>
+                <td><a href="/submissions/{{.ID}}">#{{.ID}}</a></td>
+                <td>{{.Username}}</td>
+                <td>{{if eq .Status "pending"}}<span class="badge badge-pending">In Progress</span>{{else}}<span class="badge badge-complete">Complete</span>{{end}}</td>
+                <td>{{.CreatedAt.Format "Jan 2, 2006"}}</td>
+                <td class="notes-cell">{{if .Notes}}{{.Notes}}{{else}}<span class="muted">—</span>{{end}}</td>
+                <td><a href="/submissions/{{.ID}}" class="btn btn-sm btn-ghost">View</a></td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+    <a href="/submissions" class="link-more">View all submissions →</a>
+    {{else}}
+    <p class="empty-msg">No submissions yet. <a href="/submit">Submit the first one!</a></p>
+    {{end}}
+</section>
+{{end}}

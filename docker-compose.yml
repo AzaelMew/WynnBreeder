@@ -1,0 +1,11 @@
+services:
+  wynnmounts:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      - WYNNMOUNTS_DB=/data/wynnmounts.db
+      - WYNNMOUNTS_PORT=8080
+    restart: unless-stopped
