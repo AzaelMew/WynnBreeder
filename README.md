@@ -1,4 +1,4 @@
-# WynnMounts
+# WynnBreeder
 
 A self-hosted web app for tracking Wynncraft mount breeding data. Submit Parent A + Parent B + Offspring stats, view stat inheritance patterns, and analyze breeding outcomes over time.
 
