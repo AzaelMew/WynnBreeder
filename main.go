@@ -165,7 +165,7 @@ func runSeedAdmin(args []string) {
 		log.Fatalf("hash password: %v", err)
 	}
 
-	user, err := db.CreateUser(*username, string(hash), true)
+	user, err := db.CreateSuperAdmin(*username, string(hash))
 	if err != nil {
 		log.Fatalf("create admin: %v", err)
 	}

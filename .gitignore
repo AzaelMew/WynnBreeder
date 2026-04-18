@@ -9,3 +9,4 @@ wynnmounts
 
 # Go
 vendor/
+.codex

@@ -93,9 +93,10 @@ CREATE INDEX IF NOT EXISTS idx_submissions_user ON submissions(user_id);
 		return fmt.Errorf("v1 migration: %w", err)
 	}
 
-	// v2: add status column to submissions (pending/complete)
 	var schemaVer int
 	_ = db.QueryRow(`SELECT COALESCE(MAX(version), 0) FROM schema_version`).Scan(&schemaVer)
+
+	// v2: add status column to submissions (pending/complete)
 	if schemaVer < 2 {
 		v2 := `
 ALTER TABLE submissions ADD COLUMN status TEXT NOT NULL DEFAULT 'complete';
@@ -104,6 +105,18 @@ INSERT OR REPLACE INTO schema_version (version) VALUES (2);
 `
 		if _, err := db.Exec(v2); err != nil {
 			return fmt.Errorf("v2 migration: %w", err)
+		}
+		schemaVer = 2
+	}
+
+	// v3: add is_superadmin column to users
+	if schemaVer < 3 {
+		v3 := `
+ALTER TABLE users ADD COLUMN is_superadmin BOOLEAN NOT NULL DEFAULT 0;
+INSERT OR REPLACE INTO schema_version (version) VALUES (3);
+`
+		if _, err := db.Exec(v3); err != nil {
+			return fmt.Errorf("v3 migration: %w", err)
 		}
 	}
 

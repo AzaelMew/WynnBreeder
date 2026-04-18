@@ -13,9 +13,17 @@ var ErrUserNotFound = errors.New("user not found")
 var ErrUsernameTaken = errors.New("username already taken")
 
 func (db *DB) CreateUser(username, passwordHash string, isAdmin bool) (*models.User, error) {
+	return db.createUser(username, passwordHash, isAdmin, false)
+}
+
+func (db *DB) CreateSuperAdmin(username, passwordHash string) (*models.User, error) {
+	return db.createUser(username, passwordHash, true, true)
+}
+
+func (db *DB) createUser(username, passwordHash string, isAdmin, isSuperAdmin bool) (*models.User, error) {
 	res, err := db.Exec(
-		`INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)`,
-		strings.ToLower(username), passwordHash, isAdmin,
+		`INSERT INTO users (username, password_hash, is_admin, is_superadmin) VALUES (?, ?, ?, ?)`,
+		strings.ToLower(username), passwordHash, isAdmin, isSuperAdmin,
 	)
 	if err != nil {
 		if isUniqueConstraint(err) {
@@ -30,8 +38,8 @@ func (db *DB) CreateUser(username, passwordHash string, isAdmin bool) (*models.U
 func (db *DB) GetUserByID(id int64) (*models.User, error) {
 	u := &models.User{}
 	err := db.QueryRow(
-		`SELECT id, username, password_hash, is_admin, created_at FROM users WHERE id = ?`, id,
-	).Scan(&u.ID, &u.Username, &u.PasswordHash, &u.IsAdmin, &u.CreatedAt)
+		`SELECT id, username, password_hash, is_admin, is_superadmin, created_at FROM users WHERE id = ?`, id,
+	).Scan(&u.ID, &u.Username, &u.PasswordHash, &u.IsAdmin, &u.IsSuperAdmin, &u.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrUserNotFound
 	}
@@ -44,8 +52,8 @@ func (db *DB) GetUserByID(id int64) (*models.User, error) {
 func (db *DB) GetUserByUsername(username string) (*models.User, error) {
 	u := &models.User{}
 	err := db.QueryRow(
-		`SELECT id, username, password_hash, is_admin, created_at FROM users WHERE username = ?`, strings.ToLower(username),
-	).Scan(&u.ID, &u.Username, &u.PasswordHash, &u.IsAdmin, &u.CreatedAt)
+		`SELECT id, username, password_hash, is_admin, is_superadmin, created_at FROM users WHERE username = ?`, strings.ToLower(username),
+	).Scan(&u.ID, &u.Username, &u.PasswordHash, &u.IsAdmin, &u.IsSuperAdmin, &u.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrUserNotFound
 	}
@@ -57,7 +65,7 @@ func (db *DB) GetUserByUsername(username string) (*models.User, error) {
 
 func (db *DB) ListUsers() ([]models.User, error) {
 	rows, err := db.Query(
-		`SELECT id, username, is_admin, created_at FROM users ORDER BY created_at DESC`,
+		`SELECT id, username, is_admin, is_superadmin, created_at FROM users ORDER BY created_at DESC`,
 	)
 	if err != nil {
 		return nil, err
@@ -67,7 +75,7 @@ func (db *DB) ListUsers() ([]models.User, error) {
 	var users []models.User
 	for rows.Next() {
 		var u models.User
-		if err := rows.Scan(&u.ID, &u.Username, &u.IsAdmin, &u.CreatedAt); err != nil {
+		if err := rows.Scan(&u.ID, &u.Username, &u.IsAdmin, &u.IsSuperAdmin, &u.CreatedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, u)

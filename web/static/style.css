@@ -448,6 +448,7 @@ a:hover { text-decoration: underline; }
     color: var(--text-muted);
 }
 .badge-admin { background: rgba(251,191,36,0.1); border-color: var(--warning); color: var(--warning); }
+.badge-superadmin { background: rgba(167,139,250,0.1); border-color: #a78bfa; color: #a78bfa; }
 
 /* ── Misc ──────────────────────────────────────────────────── */
 .count-badge {

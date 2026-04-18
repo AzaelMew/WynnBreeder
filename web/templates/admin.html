@@ -58,10 +58,15 @@
             <tr>
                 <td>{{.ID}}</td>
                 <td>{{.Username}}</td>
-                <td>{{if .IsAdmin}}<span class="badge badge-admin">Admin</span>{{else}}<span class="badge">User</span>{{end}}</td>
+                <td>
+                    {{if .IsSuperAdmin}}<span class="badge badge-superadmin">Superadmin</span>
+                    {{else if .IsAdmin}}<span class="badge badge-admin">Admin</span>
+                    {{else}}<span class="badge">User</span>{{end}}
+                </td>
                 <td>{{.CreatedAt.Format "Jan 2, 2006"}}</td>
                 <td>
-                    {{if not .IsAdmin}}
+                    {{$canDelete := and (not .IsSuperAdmin) (or (not .IsAdmin) $.User.IsSuperAdmin)}}
+                    {{if $canDelete}}
                     <button
                         class="btn btn-sm btn-danger"
                         @click="deleteUser({{.ID}}, '{{.Username}}')"

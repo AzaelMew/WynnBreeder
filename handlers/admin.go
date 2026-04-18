@@ -84,28 +84,29 @@ func (h *Handler) APIDeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Prevent deleting last admin
+	me := UserFromContext(r.Context())
+
 	target, err := h.DB.GetUserByID(id)
 	if err != nil {
 		jsonError(w, "user not found", http.StatusNotFound)
 		return
 	}
-	if target.IsAdmin {
-		count, err := h.DB.CountAdmins()
-		if err != nil {
-			jsonError(w, "db error", http.StatusInternalServerError)
-			return
-		}
-		if count <= 1 {
-			jsonError(w, "cannot delete the last admin", http.StatusBadRequest)
-			return
-		}
-	}
 
 	// Prevent self-deletion
-	me := UserFromContext(r.Context())
 	if me != nil && me.ID == id {
 		jsonError(w, "cannot delete your own account", http.StatusBadRequest)
+		return
+	}
+
+	// Only superadmin can delete other admins
+	if target.IsAdmin && (me == nil || !me.IsSuperAdmin) {
+		jsonError(w, "only the superadmin can delete admin accounts", http.StatusForbidden)
+		return
+	}
+
+	// Prevent deleting the last superadmin
+	if target.IsSuperAdmin {
+		jsonError(w, "cannot delete the superadmin account", http.StatusBadRequest)
 		return
 	}
 
