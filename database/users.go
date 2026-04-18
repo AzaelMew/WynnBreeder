@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"wynnmounts/models"
+	"wynnbreeder/models"
 )
 
 var ErrUserNotFound = errors.New("user not found")

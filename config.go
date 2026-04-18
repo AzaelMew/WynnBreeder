@@ -13,11 +13,11 @@ type Config struct {
 }
 
 func loadConfig() Config {
-	port := getEnv("WYNNMOUNTS_PORT", "8080")
-	dbPath := getEnv("WYNNMOUNTS_DB", "./wynnmounts.db")
+	port := getEnv("WYNNBREEDER_PORT", "8080")
+	dbPath := getEnv("WYNNBREEDER_DB", "./wynnbreeder.db")
 
 	ttlDays := 30
-	if v := os.Getenv("WYNNMOUNTS_SESSION_DAYS"); v != "" {
+	if v := os.Getenv("WYNNBREEDER_SESSION_DAYS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
 			ttlDays = n
 		}

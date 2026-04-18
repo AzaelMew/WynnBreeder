@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"wynnmounts/database"
+	"wynnbreeder/database"
 	"golang.org/x/crypto/bcrypt"
 )
 

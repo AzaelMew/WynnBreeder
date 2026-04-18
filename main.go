@@ -11,9 +11,9 @@ import (
 	"net/http"
 	"os"
 
-	"wynnmounts/database"
-	"wynnmounts/handlers"
-	"wynnmounts/models"
+	"wynnbreeder/database"
+	"wynnbreeder/handlers"
+	"wynnbreeder/models"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -44,8 +44,8 @@ func main() {
 
 func runServe(args []string) {
 	fs := flag.NewFlagSet("serve", flag.ExitOnError)
-	port := fs.String("port", "", "Port to listen on (overrides WYNNMOUNTS_PORT)")
-	dbPath := fs.String("db", "", "SQLite DB path (overrides WYNNMOUNTS_DB)")
+	port := fs.String("port", "", "Port to listen on (overrides WYNNBREEDER_PORT)")
+	dbPath := fs.String("db", "", "SQLite DB path (overrides WYNNBREEDER_DB)")
 	_ = fs.Parse(args)
 
 	cfg := loadConfig()
@@ -129,7 +129,7 @@ func runServe(args []string) {
 		r.Delete("/api/admin/users/{id}", h.APIDeleteUser)
 	})
 
-	log.Printf("WynnMounts running on http://localhost:%s", cfg.Port)
+	log.Printf("WynnBreeder running on http://localhost:%s", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
 		log.Fatalf("server: %v", err)
 	}
@@ -139,7 +139,7 @@ func runSeedAdmin(args []string) {
 	fs := flag.NewFlagSet("seed-admin", flag.ExitOnError)
 	username := fs.String("username", "", "Admin username (required)")
 	password := fs.String("password", "", "Admin password (required)")
-	dbPath := fs.String("db", "", "SQLite DB path (overrides WYNNMOUNTS_DB)")
+	dbPath := fs.String("db", "", "SQLite DB path (overrides WYNNBREEDER_DB)")
 	_ = fs.Parse(args)
 
 	if *username == "" || *password == "" {
@@ -177,7 +177,7 @@ func runSeedAdmin(args []string) {
 func runPromote(args []string) {
 	fs := flag.NewFlagSet("promote", flag.ExitOnError)
 	username := fs.String("username", "", "Username to promote to superadmin (required)")
-	dbPath := fs.String("db", "", "SQLite DB path (overrides WYNNMOUNTS_DB)")
+	dbPath := fs.String("db", "", "SQLite DB path (overrides WYNNBREEDER_DB)")
 	_ = fs.Parse(args)
 
 	if *username == "" {

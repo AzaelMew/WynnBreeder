@@ -21,17 +21,17 @@ A self-hosted web app for tracking Wynncraft mount breeding data. Submit Parent 
 
 **1. Build**
 ```bash
-go build -o wynnmounts .
+go build -o wynnbreeder .
 ```
 
 **2. Create the admin account** (first time only)
 ```bash
-./wynnmounts seed-admin --username admin --password yourpassword
+./wynnbreeder seed-admin --username admin --password yourpassword
 ```
 
 **3. Start the server**
 ```bash
-./wynnmounts serve --port 8080
+./wynnbreeder serve --port 8080
 ```
 
 Open `http://localhost:8080` in your browser and log in.
@@ -44,11 +44,11 @@ Open `http://localhost:8080` in your browser and log in.
 docker compose up -d
 ```
 
-The database is stored in `./data/wynnmounts.db` on your host.
+The database is stored in `./data/wynnbreeder.db` on your host.
 
 Create the admin account inside the container:
 ```bash
-docker compose exec wynnmounts ./wynnmounts seed-admin --username admin --password yourpassword
+docker compose exec wynnbreeder ./wynnbreeder seed-admin --username admin --password yourpassword
 ```
 
 ---
@@ -59,9 +59,9 @@ All settings can be set via environment variables or CLI flags.
 
 | Environment variable | CLI flag | Default | Description |
 |---|---|---|---|
-| `WYNNMOUNTS_PORT` | `--port` | `8080` | Port to listen on |
-| `WYNNMOUNTS_DB` | `--db` | `./wynnmounts.db` | Path to SQLite database file |
-| `WYNNMOUNTS_SESSION_DAYS` | — | `30` | Session cookie lifetime in days |
+| `WYNNBREEDER_PORT` | `--port` | `8080` | Port to listen on |
+| `WYNNBREEDER_DB` | `--db` | `./wynnbreeder.db` | Path to SQLite database file |
+| `WYNNBREEDER_SESSION_DAYS` | — | `30` | Session cookie lifetime in days |
 
 ---
 
@@ -113,25 +113,25 @@ A basic VPS or a small cloud instance is more than sufficient.
 
 ### Keeping it running with systemd
 
-Create `/etc/systemd/system/wynnmounts.service`:
+Create `/etc/systemd/system/wynnbreeder.service`:
 
 ```ini
 [Unit]
-Description=WynnMounts
+Description=WynnBreeder
 After=network.target
 
 [Service]
-ExecStart=/opt/wynnmounts/wynnmounts serve
-WorkingDirectory=/opt/wynnmounts
+ExecStart=/opt/wynnbreeder/wynnbreeder serve
+WorkingDirectory=/opt/wynnbreeder
 Restart=always
-Environment=WYNNMOUNTS_DB=/opt/wynnmounts/data/wynnmounts.db
+Environment=WYNNBREEDER_DB=/opt/wynnbreeder/data/wynnbreeder.db
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 ```bash
-systemctl enable --now wynnmounts
+systemctl enable --now wynnbreeder
 ```
 
 ---
@@ -141,11 +141,11 @@ systemctl enable --now wynnmounts
 The entire database is a single file. Back it up by copying it:
 
 ```bash
-cp wynnmounts.db wynnmounts.db.bak
+cp wynnbreeder.db wynnbreeder.db.bak
 ```
 
 For automated backups, SQLite's online backup is safe to run while the server is live:
 
 ```bash
-sqlite3 wynnmounts.db ".backup wynnmounts-backup.db"
+sqlite3 wynnbreeder.db ".backup wynnbreeder-backup.db"
 ```

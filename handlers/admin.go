@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"wynnmounts/database"
+	"wynnbreeder/database"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/go-chi/chi/v5"

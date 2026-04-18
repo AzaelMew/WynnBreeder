@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"wynnmounts/models"
+	"wynnbreeder/models"
 )
 
 func (h *Handler) AnalyticsPage(w http.ResponseWriter, r *http.Request) {

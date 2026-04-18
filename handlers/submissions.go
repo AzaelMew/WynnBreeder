@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"wynnmounts/database"
-	"wynnmounts/models"
+	"wynnbreeder/database"
+	"wynnbreeder/models"
 
 	"github.com/go-chi/chi/v5"
 )

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"wynnmounts/models"
+	"wynnbreeder/models"
 )
 
 var ErrSubmissionNotFound = errors.New("submission not found")

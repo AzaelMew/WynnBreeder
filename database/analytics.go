@@ -1,7 +1,7 @@
 package database
 
 import (
-	"wynnmounts/models"
+	"wynnbreeder/models"
 )
 
 func (db *DB) GetStatInheritance() ([]models.StatRow, error) {

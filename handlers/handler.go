@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"wynnmounts/database"
-	"wynnmounts/models"
+	"wynnbreeder/database"
+	"wynnbreeder/models"
 )
 
 type Handler struct {

@@ -1,4 +1,4 @@
-// WynnMounts — global JS utilities
+// WynnBreeder — global JS utilities
 // Alpine.js components are inline in templates
 
 // CSRF: not needed for cookie-based auth with SameSite=Lax

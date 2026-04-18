@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"wynnmounts/models"
+	"wynnbreeder/models"
 )
 
 var ErrSessionNotFound = errors.New("session not found")
