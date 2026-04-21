@@ -116,3 +116,54 @@ func (h *Handler) APIDeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonOK(w, map[string]bool{"ok": true})
 }
+
+func (h *Handler) APISetUserRole(w http.ResponseWriter, r *http.Request) {
+	me := UserFromContext(r.Context())
+	if me == nil || !me.IsSuperAdmin {
+		jsonError(w, "only superadmin can change roles", http.StatusForbidden)
+		return
+	}
+
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		jsonError(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	if me.ID == id {
+		jsonError(w, "cannot change your own role", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		Role string `json:"role"` // "user", "admin", "superadmin"
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		jsonError(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	var isAdmin, isSuperAdmin bool
+	switch req.Role {
+	case "user":
+		isAdmin, isSuperAdmin = false, false
+	case "admin":
+		isAdmin, isSuperAdmin = true, false
+	case "superadmin":
+		isAdmin, isSuperAdmin = true, true
+	default:
+		jsonError(w, "role must be user, admin, or superadmin", http.StatusBadRequest)
+		return
+	}
+
+	updated, err := h.DB.SetUserRole(id, isAdmin, isSuperAdmin)
+	if err != nil {
+		if err == database.ErrUserNotFound {
+			jsonError(w, "user not found", http.StatusNotFound)
+			return
+		}
+		jsonError(w, "db error", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, updated)
+}

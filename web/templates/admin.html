@@ -64,7 +64,17 @@
                     {{else}}<span class="badge">User</span>{{end}}
                 </td>
                 <td>{{.CreatedAt.Format "Jan 2, 2006"}}</td>
-                <td>
+                <td class="row-actions">
+                    {{if and $.User.IsSuperAdmin (ne .ID $.User.ID)}}
+                        {{if .IsSuperAdmin}}
+                            <button class="btn btn-sm btn-ghost" @click="setRole({{.ID}}, 'admin', '{{.Username}}')">Demote to Admin</button>
+                        {{else if .IsAdmin}}
+                            <button class="btn btn-sm btn-ghost" @click="setRole({{.ID}}, 'superadmin', '{{.Username}}')">Make Superadmin</button>
+                            <button class="btn btn-sm btn-ghost" @click="setRole({{.ID}}, 'user', '{{.Username}}')">Demote to User</button>
+                        {{else}}
+                            <button class="btn btn-sm btn-ghost" @click="setRole({{.ID}}, 'admin', '{{.Username}}')">Make Admin</button>
+                        {{end}}
+                    {{end}}
                     {{$canDelete := and (not .IsSuperAdmin) (or (not .IsAdmin) $.User.IsSuperAdmin)}}
                     {{if $canDelete}}
                     <button
@@ -165,6 +175,22 @@ function adminPanel() {
         async deleteUser(id, username) {
             if (!confirm(`Delete user "${username}"? This will also delete all their submissions.`)) return;
             const res = await fetch('/api/admin/users/' + id, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'unknown'));
+            }
+        },
+
+        async setRole(id, role, username) {
+            const labels = { user: 'User', admin: 'Admin', superadmin: 'Superadmin' };
+            if (!confirm(`Set "${username}" role to ${labels[role]}?`)) return;
+            const res = await fetch('/api/admin/users/' + id + '/role', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role }),
+            });
             const data = await res.json();
             if (res.ok) {
                 window.location.reload();
