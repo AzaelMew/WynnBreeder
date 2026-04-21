@@ -98,10 +98,10 @@
         <thead>
             <tr>
                 <th>Stat</th>
-                <th>Parent A</th>
-                <th>Parent B</th>
+                <th>Parent A<br><small class="muted">val / lim / max</small></th>
+                <th>Parent B<br><small class="muted">val / lim / max</small></th>
                 <th>Avg</th>
-                <th>Offspring</th>
+                <th>Offspring<br><small class="muted">val / lim / max</small></th>
                 <th>Delta</th>
             </tr>
         </thead>
@@ -109,10 +109,16 @@
             {{range $deltas}}
             <tr>
                 <td>{{.Name}}</td>
-                <td class="stat-num">{{.ParentA}}</td>
-                <td class="stat-num">{{.ParentB}}</td>
+                <td class="stat-num">
+                    {{if .ParentAMax}}{{.ParentA}} / {{.ParentALim}} / {{.ParentAMax}}{{else}}{{.ParentA}}{{end}}
+                </td>
+                <td class="stat-num">
+                    {{if .ParentBMax}}{{.ParentB}} / {{.ParentBLim}} / {{.ParentBMax}}{{else}}{{.ParentB}}{{end}}
+                </td>
                 <td class="stat-num muted">{{roundf .Avg}}</td>
-                <td class="stat-num">{{.Offspring}}</td>
+                <td class="stat-num">
+                    {{if .OffspringMax}}{{.Offspring}} / {{.OffspringLim}} / {{.OffspringMax}}{{else}}{{.Offspring}}{{end}}
+                </td>
                 <td class="stat-num {{if gt .Delta 0.0}}delta-pos{{else if lt .Delta 0.0}}delta-neg{{end}}">{{fmtDelta .Delta}}</td>
             </tr>
             {{end}}

@@ -45,32 +45,45 @@ func (h *Handler) SubmissionsPage(w http.ResponseWriter, r *http.Request) {
 }
 
 type StatDelta struct {
-	Name      string
-	ParentA   int
-	ParentB   int
-	Avg       float64
-	Offspring int
-	Delta     float64
+	Name        string
+	ParentA     int
+	ParentALim  int
+	ParentAMax  int
+	ParentB     int
+	ParentBLim  int
+	ParentBMax  int
+	Avg         float64
+	Offspring   int
+	OffspringLim int
+	OffspringMax int
+	Delta       float64
 }
 
 func computeDeltas(pa, pb, off *models.Mount) []StatDelta {
 	if pa == nil || pb == nil || off == nil {
 		return nil
 	}
-	d := func(name string, a, b, o int) StatDelta {
-		avg := float64(a+b) / 2.0
-		return StatDelta{Name: name, ParentA: a, ParentB: b, Avg: avg, Offspring: o, Delta: float64(o) - avg}
+	d := func(name string, aVal, aLim, aMax, bVal, bLim, bMax, oVal, oLim, oMax int) StatDelta {
+		avg := float64(aVal+bVal) / 2.0
+		return StatDelta{
+			Name: name,
+			ParentA: aVal, ParentALim: aLim, ParentAMax: aMax,
+			ParentB: bVal, ParentBLim: bLim, ParentBMax: bMax,
+			Avg:       avg,
+			Offspring: oVal, OffspringLim: oLim, OffspringMax: oMax,
+			Delta: float64(oVal) - avg,
+		}
 	}
 	return []StatDelta{
-		d("Speed", pa.SpeedVal, pb.SpeedVal, off.SpeedVal),
-		d("Acceleration", pa.AccelVal, pb.AccelVal, off.AccelVal),
-		d("Altitude", pa.AltitudeVal, pb.AltitudeVal, off.AltitudeVal),
-		d("Energy", pa.EnergyStatVal, pb.EnergyStatVal, off.EnergyStatVal),
-		d("Handling", pa.HandlingVal, pb.HandlingVal, off.HandlingVal),
-		d("Toughness", pa.ToughnessVal, pb.ToughnessVal, off.ToughnessVal),
-		d("Boost", pa.BoostVal, pb.BoostVal, off.BoostVal),
-		d("Training", pa.TrainingVal, pb.TrainingVal, off.TrainingVal),
-		d("Potential", pa.Potential, pb.Potential, off.Potential),
+		d("Speed", pa.SpeedVal, pa.SpeedLim, pa.SpeedMax, pb.SpeedVal, pb.SpeedLim, pb.SpeedMax, off.SpeedVal, off.SpeedLim, off.SpeedMax),
+		d("Acceleration", pa.AccelVal, pa.AccelLim, pa.AccelMax, pb.AccelVal, pb.AccelLim, pb.AccelMax, off.AccelVal, off.AccelLim, off.AccelMax),
+		d("Altitude", pa.AltitudeVal, pa.AltitudeLim, pa.AltitudeMax, pb.AltitudeVal, pb.AltitudeLim, pb.AltitudeMax, off.AltitudeVal, off.AltitudeLim, off.AltitudeMax),
+		d("Energy", pa.EnergyStatVal, pa.EnergyStatLim, pa.EnergyStatMax, pb.EnergyStatVal, pb.EnergyStatLim, pb.EnergyStatMax, off.EnergyStatVal, off.EnergyStatLim, off.EnergyStatMax),
+		d("Handling", pa.HandlingVal, pa.HandlingLim, pa.HandlingMax, pb.HandlingVal, pb.HandlingLim, pb.HandlingMax, off.HandlingVal, off.HandlingLim, off.HandlingMax),
+		d("Toughness", pa.ToughnessVal, pa.ToughnessLim, pa.ToughnessMax, pb.ToughnessVal, pb.ToughnessLim, pb.ToughnessMax, off.ToughnessVal, off.ToughnessLim, off.ToughnessMax),
+		d("Boost", pa.BoostVal, pa.BoostLim, pa.BoostMax, pb.BoostVal, pb.BoostLim, pb.BoostMax, off.BoostVal, off.BoostLim, off.BoostMax),
+		d("Training", pa.TrainingVal, pa.TrainingLim, pa.TrainingMax, pb.TrainingVal, pb.TrainingLim, pb.TrainingMax, off.TrainingVal, off.TrainingLim, off.TrainingMax),
+		d("Potential", pa.Potential, 0, 0, pb.Potential, 0, 0, off.Potential, 0, 0),
 	}
 }
 
