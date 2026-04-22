@@ -228,3 +228,36 @@ func (db *DB) DeleteSubmission(id int64) error {
 	_, err := db.Exec(`DELETE FROM submissions WHERE id = ?`, id)
 	return err
 }
+
+// ListAllSubmissionsWithMounts returns every submission with its mounts loaded.
+func (db *DB) ListAllSubmissionsWithMounts() ([]models.Submission, error) {
+	rows, err := db.Query(`
+SELECT s.id, s.user_id, u.username, s.notes, s.status, s.created_at
+FROM submissions s JOIN users u ON s.user_id = u.id
+ORDER BY s.id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var subs []models.Submission
+	for rows.Next() {
+		var s models.Submission
+		if err := rows.Scan(&s.ID, &s.UserID, &s.Username, &s.Notes, &s.Status, &s.CreatedAt); err != nil {
+			return nil, err
+		}
+		subs = append(subs, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	for i := range subs {
+		mounts, err := db.getMountsForSubmission(subs[i].ID)
+		if err != nil {
+			return nil, err
+		}
+		subs[i].Mounts = mounts
+	}
+	return subs, nil
+}

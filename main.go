@@ -128,6 +128,7 @@ func runServe(args []string) {
 		r.Post("/api/admin/users", h.APICreateUser)
 		r.Delete("/api/admin/users/{id}", h.APIDeleteUser)
 		r.Patch("/api/admin/users/{id}/role", h.APISetUserRole)
+		r.Get("/api/admin/export", h.APIExportSubmissions)
 	})
 
 	log.Printf("WynnBreeder running on http://localhost:%s", cfg.Port)

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -266,6 +267,71 @@ func (h *Handler) APIDeleteSubmission(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonOK(w, map[string]bool{"ok": true})
 }
+
+// APIExportSubmissions handles GET /api/admin/export?format=csv|json
+// Admin only. Returns all submissions with mounts.
+func (h *Handler) APIExportSubmissions(w http.ResponseWriter, r *http.Request) {
+	format := r.URL.Query().Get("format")
+	if format == "" {
+		format = "json"
+	}
+
+	subs, err := h.DB.ListAllSubmissionsWithMounts()
+	if err != nil {
+		jsonError(w, "db error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	switch format {
+	case "json":
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Disposition", "attachment; filename=\"wynnbreeder_export.json\"")
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		_ = enc.Encode(subs)
+
+	case "csv":
+		w.Header().Set("Content-Type", "text/csv")
+		w.Header().Set("Content-Disposition", "attachment; filename=\"wynnbreeder_export.csv\"")
+		cw := csv.NewWriter(w)
+		_ = cw.Write([]string{
+			"submission_id", "user_id", "username", "notes", "status", "created_at",
+			"mount_id", "role", "type", "potential", "color", "name",
+			"energy_value", "energy_max",
+			"speed_val", "speed_lim", "speed_max",
+			"accel_val", "accel_lim", "accel_max",
+			"altitude_val", "altitude_lim", "altitude_max",
+			"energy_stat_val", "energy_stat_lim", "energy_stat_max",
+			"handling_val", "handling_lim", "handling_max",
+			"toughness_val", "toughness_lim", "toughness_max",
+			"boost_val", "boost_lim", "boost_max",
+			"training_val", "training_lim", "training_max",
+		})
+		for _, s := range subs {
+			for _, m := range s.Mounts {
+				_ = cw.Write([]string{
+					itoa(s.ID), itoa(s.UserID), s.Username, s.Notes, s.Status, s.CreatedAt.Format("2006-01-02T15:04:05Z"),
+					itoa(m.ID), string(m.Role), m.Type, itoa(int64(m.Potential)), m.Color, m.Name,
+					itoa(int64(m.EnergyValue)), itoa(int64(m.EnergyMax)),
+					itoa(int64(m.SpeedVal)), itoa(int64(m.SpeedLim)), itoa(int64(m.SpeedMax)),
+					itoa(int64(m.AccelVal)), itoa(int64(m.AccelLim)), itoa(int64(m.AccelMax)),
+					itoa(int64(m.AltitudeVal)), itoa(int64(m.AltitudeLim)), itoa(int64(m.AltitudeMax)),
+					itoa(int64(m.EnergyStatVal)), itoa(int64(m.EnergyStatLim)), itoa(int64(m.EnergyStatMax)),
+					itoa(int64(m.HandlingVal)), itoa(int64(m.HandlingLim)), itoa(int64(m.HandlingMax)),
+					itoa(int64(m.ToughnessVal)), itoa(int64(m.ToughnessLim)), itoa(int64(m.ToughnessMax)),
+					itoa(int64(m.BoostVal)), itoa(int64(m.BoostLim)), itoa(int64(m.BoostMax)),
+					itoa(int64(m.TrainingVal)), itoa(int64(m.TrainingLim)), itoa(int64(m.TrainingMax)),
+				})
+			}
+		}
+		cw.Flush()
+
+	default:
+		jsonError(w, "unknown format; use csv or json", http.StatusBadRequest)
+	}
+}
+
+func itoa(n int64) string { return strconv.FormatInt(n, 10) }
 
 func validateMountJSON(m models.MountJSON, role string) error {
 	if strings.TrimSpace(m.Type) == "" {
