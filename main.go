@@ -119,6 +119,7 @@ func runServe(args []string) {
 		r.Delete("/api/submissions/{id}", h.APIDeleteSubmission)
 		r.Patch("/api/submissions/{id}/offspring", h.APIAddOffspring)
 		r.Get("/api/analytics/stats", h.APIAnalyticsStats)
+		r.Get("/api/export", h.APIExportSubmissions)
 	})
 
 	// Admin API routes
@@ -128,7 +129,6 @@ func runServe(args []string) {
 		r.Post("/api/admin/users", h.APICreateUser)
 		r.Delete("/api/admin/users/{id}", h.APIDeleteUser)
 		r.Patch("/api/admin/users/{id}/role", h.APISetUserRole)
-		r.Get("/api/admin/export", h.APIExportSubmissions)
 	})
 
 	log.Printf("WynnBreeder running on http://localhost:%s", cfg.Port)
