@@ -106,7 +106,7 @@ func MountFromJSON(mj MountJSON, submissionID int64, role MountRole) Mount {
 		SubmissionID:  submissionID,
 		Role:          role,
 		Type:          mj.Type,
-		Potential:     mj.Potential,
+		Potential:     mj.Stats.Speed.MaxValue + mj.Stats.Acceleration.MaxValue + mj.Stats.Altitude.MaxValue + mj.Stats.Energy.MaxValue + mj.Stats.Handling.MaxValue + mj.Stats.Toughness.MaxValue + mj.Stats.Boost.MaxValue + mj.Stats.Training.MaxValue,
 		Color:         mj.Color,
 		Name:          mj.Name,
 		EnergyValue:   mj.Energy.Value,
