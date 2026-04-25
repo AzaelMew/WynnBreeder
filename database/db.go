@@ -118,6 +118,18 @@ INSERT OR REPLACE INTO schema_version (version) VALUES (3);
 		if _, err := db.Exec(v3); err != nil {
 			return fmt.Errorf("v3 migration: %w", err)
 		}
+		schemaVer = 3
+	}
+
+	// v4: recalculate potential as sum of 8 stat max values (JSON rounded past 1000)
+	if schemaVer < 4 {
+		v4 := `
+UPDATE mounts SET potential = speed_max + accel_max + altitude_max + energy_stat_max + handling_max + toughness_max + boost_max + training_max;
+INSERT OR REPLACE INTO schema_version (version) VALUES (4);
+`
+		if _, err := db.Exec(v4); err != nil {
+			return fmt.Errorf("v4 migration: %w", err)
+		}
 	}
 
 	return nil
