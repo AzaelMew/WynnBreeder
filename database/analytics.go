@@ -7,23 +7,23 @@ import (
 func (db *DB) GetStatInheritance() ([]models.StatRow, error) {
 	stats := []struct {
 		name   string
-		aCol   string
-		bCol   string
-		offCol string
+		valCol string
+		limCol string
+		maxCol string
 	}{
-		{"Speed", "speed_val", "speed_val", "speed_val"},
-		{"Acceleration", "accel_val", "accel_val", "accel_val"},
-		{"Altitude", "altitude_val", "altitude_val", "altitude_val"},
-		{"Energy", "energy_stat_val", "energy_stat_val", "energy_stat_val"},
-		{"Handling", "handling_val", "handling_val", "handling_val"},
-		{"Toughness", "toughness_val", "toughness_val", "toughness_val"},
-		{"Boost", "boost_val", "boost_val", "boost_val"},
-		{"Training", "training_val", "training_val", "training_val"},
+		{"Speed", "speed_val", "speed_lim", "speed_max"},
+		{"Acceleration", "accel_val", "accel_lim", "accel_max"},
+		{"Altitude", "altitude_val", "altitude_lim", "altitude_max"},
+		{"Energy", "energy_stat_val", "energy_stat_lim", "energy_stat_max"},
+		{"Handling", "handling_val", "handling_lim", "handling_max"},
+		{"Toughness", "toughness_val", "toughness_lim", "toughness_max"},
+		{"Boost", "boost_val", "boost_lim", "boost_max"},
+		{"Training", "training_val", "training_lim", "training_max"},
 	}
 
 	var rows []models.StatRow
 	for _, s := range stats {
-		row, err := db.getStatRow(s.name, s.aCol)
+		row, err := db.getStatRow(s.name, s.valCol, s.limCol, s.maxCol)
 		if err != nil {
 			return nil, err
 		}
@@ -32,14 +32,24 @@ func (db *DB) GetStatInheritance() ([]models.StatRow, error) {
 	return rows, nil
 }
 
-func (db *DB) getStatRow(statName, col string) (models.StatRow, error) {
+func (db *DB) getStatRow(statName, valCol, limCol, maxCol string) (models.StatRow, error) {
 	query := `
 SELECT
-    AVG(pa.` + col + `) as avg_a,
-    AVG(pb.` + col + `) as avg_b,
-    AVG((pa.` + col + ` + pb.` + col + `) / 2.0) as avg_parent_avg,
-    AVG(off.` + col + `) as avg_off,
-    AVG(off.` + col + ` - (pa.` + col + ` + pb.` + col + `) / 2.0) as delta,
+    AVG(pa.` + valCol + `) as avg_a_val,
+    AVG(pa.` + limCol + `) as avg_a_lim,
+    AVG(pa.` + maxCol + `) as avg_a_max,
+    AVG(pb.` + valCol + `) as avg_b_val,
+    AVG(pb.` + limCol + `) as avg_b_lim,
+    AVG(pb.` + maxCol + `) as avg_b_max,
+    AVG((pa.` + valCol + ` + pb.` + valCol + `) / 2.0) as avg_parent_avg_val,
+    AVG((pa.` + limCol + ` + pb.` + limCol + `) / 2.0) as avg_parent_avg_lim,
+    AVG((pa.` + maxCol + ` + pb.` + maxCol + `) / 2.0) as avg_parent_avg_max,
+    AVG(off.` + valCol + `) as avg_off_val,
+    AVG(off.` + limCol + `) as avg_off_lim,
+    AVG(off.` + maxCol + `) as avg_off_max,
+    AVG(off.` + valCol + ` - (pa.` + valCol + ` + pb.` + valCol + `) / 2.0) as delta_val,
+    AVG(off.` + limCol + ` - (pa.` + limCol + ` + pb.` + limCol + `) / 2.0) as delta_lim,
+    AVG(off.` + maxCol + ` - (pa.` + maxCol + ` + pb.` + maxCol + `) / 2.0) as delta_max,
     COUNT(*) as cnt
 FROM submissions s
 JOIN mounts pa ON pa.submission_id = s.id AND pa.role = 'parent_a'
@@ -49,8 +59,12 @@ JOIN mounts off ON off.submission_id = s.id AND off.role = 'offspring'`
 	var row models.StatRow
 	row.StatName = statName
 	err := db.QueryRow(query).Scan(
-		&row.AvgParentAVal, &row.AvgParentBVal, &row.AvgParentAvg,
-		&row.AvgOffspringVal, &row.Delta, &row.Count,
+		&row.AvgParentAVal, &row.AvgParentALim, &row.AvgParentAMax,
+		&row.AvgParentBVal, &row.AvgParentBLim, &row.AvgParentBMax,
+		&row.AvgParentAvgVal, &row.AvgParentAvgLim, &row.AvgParentAvgMax,
+		&row.AvgOffspringVal, &row.AvgOffspringLim, &row.AvgOffspringMax,
+		&row.DeltaVal, &row.DeltaLim, &row.DeltaMax,
+		&row.Count,
 	)
 	return row, err
 }

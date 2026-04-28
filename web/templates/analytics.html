@@ -20,11 +20,11 @@
         <thead>
             <tr>
                 <th>Stat</th>
-                <th>Avg Parent A</th>
-                <th>Avg Parent B</th>
-                <th>Avg Parent</th>
-                <th>Avg Offspring</th>
-                <th>Delta</th>
+                <th>Avg Parent A<br><small class="muted">val / lim / max</small></th>
+                <th>Avg Parent B<br><small class="muted">val / lim / max</small></th>
+                <th>Avg Parent<br><small class="muted">val / lim / max</small></th>
+                <th>Avg Offspring<br><small class="muted">val / lim / max</small></th>
+                <th>Delta<br><small class="muted">val / lim / max</small></th>
                 <th>n</th>
             </tr>
         </thead>
@@ -32,11 +32,11 @@
             {{range $statRows}}
             <tr>
                 <td>{{.StatName}}</td>
-                <td class="stat-num">{{roundf .AvgParentAVal}}</td>
-                <td class="stat-num">{{roundf .AvgParentBVal}}</td>
-                <td class="stat-num muted">{{roundf .AvgParentAvg}}</td>
-                <td class="stat-num">{{roundf .AvgOffspringVal}}</td>
-                <td class="stat-num {{if gt .Delta 0.0}}delta-pos{{else if lt .Delta 0.0}}delta-neg{{end}}">{{fmtDelta .Delta}}</td>
+                <td class="stat-num">{{roundf .AvgParentAVal}} / {{roundf .AvgParentALim}} / {{roundf .AvgParentAMax}}</td>
+                <td class="stat-num">{{roundf .AvgParentBVal}} / {{roundf .AvgParentBLim}} / {{roundf .AvgParentBMax}}</td>
+                <td class="stat-num muted">{{roundf .AvgParentAvgVal}} / {{roundf .AvgParentAvgLim}} / {{roundf .AvgParentAvgMax}}</td>
+                <td class="stat-num">{{roundf .AvgOffspringVal}} / {{roundf .AvgOffspringLim}} / {{roundf .AvgOffspringMax}}</td>
+                <td class="stat-num">{{template "deltaSpan" .DeltaVal}} / {{template "deltaSpan" .DeltaLim}} / {{template "deltaSpan" .DeltaMax}}</td>
                 <td class="muted">{{.Count}}</td>
             </tr>
             {{end}}

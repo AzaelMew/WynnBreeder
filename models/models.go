@@ -147,13 +147,23 @@ type SubmitRequest struct {
 
 // StatRow used in analytics tables
 type StatRow struct {
-	StatName       string  `json:"stat_name"`
-	AvgParentAVal  float64 `json:"avg_parent_a_val"`
-	AvgParentBVal  float64 `json:"avg_parent_b_val"`
-	AvgParentAvg   float64 `json:"avg_parent_avg"`
+	StatName        string  `json:"stat_name"`
+	AvgParentAVal   float64 `json:"avg_parent_a_val"`
+	AvgParentALim   float64 `json:"avg_parent_a_lim"`
+	AvgParentAMax   float64 `json:"avg_parent_a_max"`
+	AvgParentBVal   float64 `json:"avg_parent_b_val"`
+	AvgParentBLim   float64 `json:"avg_parent_b_lim"`
+	AvgParentBMax   float64 `json:"avg_parent_b_max"`
+	AvgParentAvgVal float64 `json:"avg_parent_avg_val"`
+	AvgParentAvgLim float64 `json:"avg_parent_avg_lim"`
+	AvgParentAvgMax float64 `json:"avg_parent_avg_max"`
 	AvgOffspringVal float64 `json:"avg_offspring_val"`
-	Delta          float64 `json:"delta"`
-	Count          int     `json:"count"`
+	AvgOffspringLim float64 `json:"avg_offspring_lim"`
+	AvgOffspringMax float64 `json:"avg_offspring_max"`
+	DeltaVal        float64 `json:"delta_val"`
+	DeltaLim        float64 `json:"delta_lim"`
+	DeltaMax        float64 `json:"delta_max"`
+	Count           int     `json:"count"`
 }
 
 type ColorInheritance struct {

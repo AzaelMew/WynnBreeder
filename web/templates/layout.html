@@ -35,3 +35,7 @@
 </body>
 </html>
 {{end}}
+
+{{define "deltaSpan"}}
+<span class="{{if gt . 0.0}}delta-pos{{else if lt . 0.0}}delta-neg{{end}}">{{fmtDelta .}}</span>
+{{end}}
