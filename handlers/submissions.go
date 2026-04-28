@@ -46,18 +46,22 @@ func (h *Handler) SubmissionsPage(w http.ResponseWriter, r *http.Request) {
 }
 
 type StatDelta struct {
-	Name        string
-	ParentA     int
-	ParentALim  int
-	ParentAMax  int
-	ParentB     int
-	ParentBLim  int
-	ParentBMax  int
-	Avg         float64
-	Offspring   int
+	Name         string
+	ParentA      int
+	ParentALim   int
+	ParentAMax   int
+	ParentB      int
+	ParentBLim   int
+	ParentBMax   int
+	AvgVal       float64
+	AvgLim       float64
+	AvgMax       float64
+	Offspring    int
 	OffspringLim int
 	OffspringMax int
-	Delta       float64
+	DeltaVal     float64
+	DeltaLim     float64
+	DeltaMax     float64
 }
 
 func computeDeltas(pa, pb, off *models.Mount) []StatDelta {
@@ -65,14 +69,18 @@ func computeDeltas(pa, pb, off *models.Mount) []StatDelta {
 		return nil
 	}
 	d := func(name string, aVal, aLim, aMax, bVal, bLim, bMax, oVal, oLim, oMax int) StatDelta {
-		avg := float64(aVal+bVal) / 2.0
+		avgVal := float64(aVal+bVal) / 2.0
+		avgLim := float64(aLim+bLim) / 2.0
+		avgMax := float64(aMax+bMax) / 2.0
 		return StatDelta{
 			Name: name,
 			ParentA: aVal, ParentALim: aLim, ParentAMax: aMax,
 			ParentB: bVal, ParentBLim: bLim, ParentBMax: bMax,
-			Avg:       avg,
+			AvgVal: avgVal, AvgLim: avgLim, AvgMax: avgMax,
 			Offspring: oVal, OffspringLim: oLim, OffspringMax: oMax,
-			Delta: float64(oVal) - avg,
+			DeltaVal: float64(oVal) - avgVal,
+			DeltaLim: float64(oLim) - avgLim,
+			DeltaMax: float64(oMax) - avgMax,
 		}
 	}
 	return []StatDelta{

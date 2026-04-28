@@ -100,9 +100,9 @@
                 <th>Stat</th>
                 <th>Parent A<br><small class="muted">val / lim / max</small></th>
                 <th>Parent B<br><small class="muted">val / lim / max</small></th>
-                <th>Avg</th>
+                <th>Avg<br><small class="muted">val / lim / max</small></th>
                 <th>Offspring<br><small class="muted">val / lim / max</small></th>
-                <th>Delta</th>
+                <th>Delta<br><small class="muted">val / lim / max</small></th>
             </tr>
         </thead>
         <tbody>
@@ -115,11 +115,19 @@
                 <td class="stat-num">
                     {{if .ParentBMax}}{{.ParentB}} / {{.ParentBLim}} / {{.ParentBMax}}{{else}}{{.ParentB}}{{end}}
                 </td>
-                <td class="stat-num muted">{{roundf .Avg}}</td>
+                <td class="stat-num muted">
+                    {{if .ParentAMax}}{{roundf .AvgVal}} / {{roundf .AvgLim}} / {{roundf .AvgMax}}{{else}}{{roundf .AvgVal}}{{end}}
+                </td>
                 <td class="stat-num">
                     {{if .OffspringMax}}{{.Offspring}} / {{.OffspringLim}} / {{.OffspringMax}}{{else}}{{.Offspring}}{{end}}
                 </td>
-                <td class="stat-num {{if gt .Delta 0.0}}delta-pos{{else if lt .Delta 0.0}}delta-neg{{end}}">{{fmtDelta .Delta}}</td>
+                <td class="stat-num">
+                    {{if .ParentAMax}}
+                        {{template "deltaSpan" .DeltaVal}} / {{template "deltaSpan" .DeltaLim}} / {{template "deltaSpan" .DeltaMax}}
+                    {{else}}
+                        {{template "deltaSpan" .DeltaVal}}
+                    {{end}}
+                </td>
             </tr>
             {{end}}
         </tbody>
@@ -286,5 +294,9 @@ function addOffspring(submissionId) {
         </div>
     </td>
 </tr>
+{{end}}
+
+{{define "deltaSpan"}}
+<span class="{{if gt . 0.0}}delta-pos{{else if lt . 0.0}}delta-neg{{end}}">{{fmtDelta .}}</span>
 {{end}}
 
