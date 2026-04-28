@@ -93,14 +93,14 @@
 {{$deltas := index $data "Deltas"}}
 {{if $deltas}}
 <section class="section delta-section">
-    <h2>Stat Deltas (Offspring vs Parent Average)</h2>
+    <h2>Stat Deltas (Offspring vs Baseline)</h2>
     <table class="table delta-table">
         <thead>
             <tr>
                 <th>Stat</th>
                 <th>Parent A<br><small class="muted">val / lim / max</small></th>
                 <th>Parent B<br><small class="muted">val / lim / max</small></th>
-                <th>Avg<br><small class="muted">val / lim / max</small></th>
+                <th>Baseline<br><small class="muted">higher / avg / lim avg</small></th>
                 <th>Offspring<br><small class="muted">val / lim / max</small></th>
                 <th>Delta<br><small class="muted">val / lim / max</small></th>
             </tr>

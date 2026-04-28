@@ -41,15 +41,15 @@ SELECT
     AVG(pb.` + valCol + `) as avg_b_val,
     AVG(pb.` + limCol + `) as avg_b_lim,
     AVG(pb.` + maxCol + `) as avg_b_max,
-    AVG((pa.` + valCol + ` + pb.` + valCol + `) / 2.0) as avg_parent_avg_val,
+    AVG(MAX(pa.` + valCol + `, pb.` + valCol + `)) as avg_parent_avg_val,
     AVG((pa.` + limCol + ` + pb.` + limCol + `) / 2.0) as avg_parent_avg_lim,
-    AVG((pa.` + maxCol + ` + pb.` + maxCol + `) / 2.0) as avg_parent_avg_max,
+    AVG((pa.` + limCol + ` + pb.` + limCol + `) / 2.0) as avg_parent_avg_max,
     AVG(off.` + valCol + `) as avg_off_val,
     AVG(off.` + limCol + `) as avg_off_lim,
     AVG(off.` + maxCol + `) as avg_off_max,
-    AVG(off.` + valCol + ` - (pa.` + valCol + ` + pb.` + valCol + `) / 2.0) as delta_val,
+    AVG(off.` + valCol + ` - MAX(pa.` + valCol + `, pb.` + valCol + `)) as delta_val,
     AVG(off.` + limCol + ` - (pa.` + limCol + ` + pb.` + limCol + `) / 2.0) as delta_lim,
-    AVG(off.` + maxCol + ` - (pa.` + maxCol + ` + pb.` + maxCol + `) / 2.0) as delta_max,
+    AVG(off.` + maxCol + ` - (pa.` + limCol + ` + pb.` + limCol + `) / 2.0) as delta_max,
     COUNT(*) as cnt
 FROM submissions s
 JOIN mounts pa ON pa.submission_id = s.id AND pa.role = 'parent_a'

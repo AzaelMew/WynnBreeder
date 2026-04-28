@@ -69,9 +69,9 @@ func computeDeltas(pa, pb, off *models.Mount) []StatDelta {
 		return nil
 	}
 	d := func(name string, aVal, aLim, aMax, bVal, bLim, bMax, oVal, oLim, oMax int) StatDelta {
-		avgVal := float64(aVal+bVal) / 2.0
+		avgVal := float64(max(aVal, bVal))
 		avgLim := float64(aLim+bLim) / 2.0
-		avgMax := float64(aMax+bMax) / 2.0
+		avgMax := float64(aLim+bLim) / 2.0
 		return StatDelta{
 			Name: name,
 			ParentA: aVal, ParentALim: aLim, ParentAMax: aMax,
