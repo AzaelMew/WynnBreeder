@@ -331,6 +331,11 @@ a:hover { text-decoration: underline; }
 }
 .mount-name { color: var(--text); }
 .mount-color { color: var(--text-muted); font-size: 0.8rem; }
+.mount-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 .mount-meta {
     display: flex;
     justify-content: space-between;

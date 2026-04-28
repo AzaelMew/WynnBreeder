@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
@@ -262,6 +263,13 @@ func loadTemplates() (map[string]*template.Template, error) {
 			return s
 		},
 		"args": func(vals ...any) []any { return vals },
+		"toJSON": func(v any) string {
+			b, err := json.Marshal(v)
+			if err != nil {
+				return ""
+			}
+			return string(b)
+		},
 	}
 
 	// Parse each page together with the layout so their "content" defines

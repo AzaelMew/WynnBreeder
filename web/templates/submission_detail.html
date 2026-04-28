@@ -136,6 +136,27 @@
 {{end}}
 
 <script>
+async function copyMountJSON(btn, jsonObj) {
+    const text = typeof jsonObj === 'string' ? jsonObj : JSON.stringify(jsonObj);
+    try {
+        await navigator.clipboard.writeText(text);
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = original, 1500);
+    } catch (e) {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = original, 1500);
+    }
+}
+
 async function deleteSubmission(id) {
     if (!confirm('Delete submission #' + id + '? This cannot be undone.')) return;
     const res = await fetch('/api/submissions/' + id, { method: 'DELETE' });
@@ -248,7 +269,10 @@ function addOffspring(submissionId) {
 <div class="mount-detail-card">
     <div class="mount-card-header">
         <span class="mount-name">{{.Name}}</span>
-        <span class="mount-color">{{.Color}}</span>
+        <div class="mount-header-actions">
+            <span class="mount-color">{{.Color}}</span>
+            <button class="btn btn-sm btn-ghost" onclick="copyMountJSON(this, {{toJSON .ToMountJSON}})">Copy JSON</button>
+        </div>
     </div>
     <div class="mount-meta">
         <span class="mount-type">{{.Type}}</span>

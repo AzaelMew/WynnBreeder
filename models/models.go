@@ -101,6 +101,35 @@ type Mount struct {
 	TrainingMax  int       `json:"training_max"`
 }
 
+func (m Mount) ToMountJSON() MountJSON {
+	return MountJSON{
+		Type:      m.Type,
+		Potential: m.Potential,
+		Color:     m.Color,
+		Name:      m.Name,
+		Energy:    EnergyValues{Value: m.EnergyValue, MaxValue: m.EnergyMax},
+		Stats: struct {
+			Speed        StatValues `json:"speed"`
+			Acceleration StatValues `json:"acceleration"`
+			Altitude     StatValues `json:"altitude"`
+			Energy       StatValues `json:"energy"`
+			Handling     StatValues `json:"handling"`
+			Toughness    StatValues `json:"toughness"`
+			Boost        StatValues `json:"boost"`
+			Training     StatValues `json:"training"`
+		}{
+			Speed:        StatValues{Value: m.SpeedVal, Limit: m.SpeedLim, MaxValue: m.SpeedMax},
+			Acceleration: StatValues{Value: m.AccelVal, Limit: m.AccelLim, MaxValue: m.AccelMax},
+			Altitude:     StatValues{Value: m.AltitudeVal, Limit: m.AltitudeLim, MaxValue: m.AltitudeMax},
+			Energy:       StatValues{Value: m.EnergyStatVal, Limit: m.EnergyStatLim, MaxValue: m.EnergyStatMax},
+			Handling:     StatValues{Value: m.HandlingVal, Limit: m.HandlingLim, MaxValue: m.HandlingMax},
+			Toughness:    StatValues{Value: m.ToughnessVal, Limit: m.ToughnessLim, MaxValue: m.ToughnessMax},
+			Boost:        StatValues{Value: m.BoostVal, Limit: m.BoostLim, MaxValue: m.BoostMax},
+			Training:     StatValues{Value: m.TrainingVal, Limit: m.TrainingLim, MaxValue: m.TrainingMax},
+		},
+	}
+}
+
 func MountFromJSON(mj MountJSON, submissionID int64, role MountRole) Mount {
 	return Mount{
 		SubmissionID:  submissionID,
