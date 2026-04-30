@@ -603,34 +603,62 @@ a:hover { text-decoration: underline; }
     min-width: 0;
     appearance: none;
     -webkit-appearance: none;
-    background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 0.5rem center;
-    border: 1px solid var(--border);
+    -moz-appearance: none;
+    background-color: #18181b;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    border: 1px solid #3f3f46;
     border-radius: var(--radius);
-    color: var(--text);
+    color: #e4e4e7;
     font-size: 0.82rem;
-    padding: 0.4rem 1.6rem 0.4rem 0.5rem;
+    padding: 0.45rem 1.8rem 0.45rem 0.65rem;
     cursor: pointer;
+    line-height: 1.4;
 }
-.pf-select:focus { outline: none; border-color: var(--accent); }
-.pf-select option, .pf-select optgroup {
-    background: var(--bg2);
-    color: var(--text);
+.pf-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(74,158,255,0.15);
+}
+.pf-select option {
+    background-color: #18181b;
+    color: #e4e4e7;
     font-size: 0.82rem;
+    padding: 0.3rem 0.5rem;
 }
-.pf-select optgroup { color: var(--text-muted); font-style: normal; font-weight: 600; }
+.pf-select optgroup {
+    background-color: #18181b;
+    color: #a1a1aa;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.5rem;
+}
 .pf-qty {
-    width: 52px;
+    width: 56px;
     appearance: none;
     -webkit-appearance: none;
-    background: var(--bg);
-    border: 1px solid var(--border);
+    -moz-appearance: textfield;
+    background-color: #18181b;
+    border: 1px solid #3f3f46;
     border-radius: var(--radius);
-    color: var(--text);
+    color: #e4e4e7;
     font-size: 0.82rem;
-    padding: 0.4rem 0.3rem;
+    padding: 0.45rem 0.4rem;
     text-align: center;
+    line-height: 1.4;
 }
-.pf-qty:focus { outline: none; border-color: var(--accent); }
+.pf-qty:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(74,158,255,0.15);
+}
+.pf-qty::-webkit-outer-spin-button,
+.pf-qty::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 .pf-qty {
     width: 52px;
     background: var(--bg);

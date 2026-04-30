@@ -49,13 +49,13 @@
                     <div class="pf-add-row">
                         <select x-model="selectedFood" class="pf-select" @keydown.enter="addFood()">
                             <option value="">Select food…</option>
-                            <template x-for="group in foodGroups" :key="group.tier">
-                                <optgroup :label="'Tier ' + group.tier">
-                                    <template x-for="food in group.foods" :key="food.name">
-                                        <option :value="food.name" x-text="food.name + ' (' + food.pts + ' pts)'"></option>
-                                    </template>
-                                </optgroup>
-                            </template>
+                            {{range $tier, $foods := index .Data "FoodGroups"}}
+                            <optgroup label="Tier {{$tier}}">
+                                {{range $foods}}
+                                <option value="{{.Name}}">{{.Name}} ({{.Pts}} pts)</option>
+                                {{end}}
+                            </optgroup>
+                            {{end}}
                         </select>
                         <input type="number" x-model.number="foodQty" min="1" max="99" class="pf-qty" placeholder="Qty" @keydown.enter="addFood()">
                         <button class="btn btn-sm btn-primary" @click="addFood()" :disabled="!selectedFood">Add</button>

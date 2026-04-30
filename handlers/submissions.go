@@ -16,7 +16,19 @@ import (
 )
 
 func (h *Handler) SubmitPage(w http.ResponseWriter, r *http.Request) {
-	h.render(w, r, "submit.html", PageData{Title: "Submit Breeding"})
+	// Group foods by tier for the template
+	type foodItem struct{ Name, Pts string }
+	foodGroups := make(map[int][]foodItem)
+	for _, m := range models.Materials {
+		pts := m.Speed + m.Acceleration + m.Altitude + m.Energy + m.Handling + m.Toughness + m.Boost + m.Training
+		foodGroups[m.Tier] = append(foodGroups[m.Tier], foodItem{Name: m.Name, Pts: strconv.Itoa(pts)})
+	}
+	h.render(w, r, "submit.html", PageData{
+		Title: "Submit Breeding",
+		Data: map[string]any{
+			"FoodGroups": foodGroups,
+		},
+	})
 }
 
 func (h *Handler) SubmissionsPage(w http.ResponseWriter, r *http.Request) {
