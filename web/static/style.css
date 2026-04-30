@@ -606,6 +606,8 @@ a:hover { text-decoration: underline; }
     min-width: 0;
 }
 .fd-trigger {
+    appearance: none;
+    -webkit-appearance: none;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -617,13 +619,14 @@ a:hover { text-decoration: underline; }
     border-radius: var(--radius);
     color: var(--text);
     font-size: 0.82rem;
+    font-family: inherit;
     cursor: pointer;
     text-align: left;
     transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
-.fd-trigger:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--border)); background: var(--bg2); }
+.fd-trigger:hover { border-color: rgba(74,158,255,0.6); background: var(--bg2); }
 .fd-trigger-open { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74,158,255,0.12); background: var(--bg2); }
-.fd-trigger-filled { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.fd-trigger-filled { border-color: rgba(74,158,255,0.35); }
 .fd-trigger-icon { flex-shrink: 0; color: var(--text-muted); transition: color 0.15s; }
 .fd-trigger-open .fd-trigger-icon,
 .fd-trigger-filled .fd-trigger-icon { color: var(--accent); }
@@ -664,6 +667,8 @@ a:hover { text-decoration: underline; }
 }
 .fd-search::placeholder { color: var(--text-muted); }
 .fd-clear-search {
+    appearance: none;
+    -webkit-appearance: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -704,6 +709,8 @@ a:hover { text-decoration: underline; }
     top: 0;
 }
 .fd-option {
+    appearance: none;
+    -webkit-appearance: none;
     display: flex;
     align-items: center;
     gap: 0.3rem;
@@ -714,6 +721,7 @@ a:hover { text-decoration: underline; }
     border: none;
     border-radius: 0;
     color: var(--text);
+    font-family: inherit;
     font-size: 0.82rem;
     cursor: pointer;
     text-align: left;
@@ -781,6 +789,8 @@ a:hover { text-decoration: underline; }
     flex-shrink: 0;
 }
 .pf-step-btn {
+    appearance: none;
+    -webkit-appearance: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -841,6 +851,8 @@ a:hover { text-decoration: underline; }
 }
 .pf-tag-name { font-weight: 500; }
 .pf-tag-remove {
+    appearance: none;
+    -webkit-appearance: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
