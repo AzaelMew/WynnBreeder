@@ -37,11 +37,17 @@
             <template x-if="mounts.parent_a">
                 <div class="pending-foods-section">
                     <div class="pf-header">
-                        <span class="pf-title">Pending Foods</span>
-                        <span class="pf-hint">Foods raise limits up to maxValue</span>
+                        <div class="pf-title-wrap">
+                            <span class="pf-icon">🍖</span>
+                            <span class="pf-title">Pending Foods</span>
+                        </div>
+                        <template x-if="totalFeeds > 0">
+                            <span class="pf-total" x-text="totalFeeds + ' feed' + (totalFeeds === 1 ? '' : 's')"></span>
+                        </template>
                     </div>
+                    <p class="pf-desc">Select foods Parent A will eat before breeding. Limits are raised up to maxValue.</p>
                     <div class="pf-add-row">
-                        <select x-model="selectedFood" class="pf-select">
+                        <select x-model="selectedFood" class="pf-select" @keydown.enter="addFood()">
                             <option value="">Select food…</option>
                             <template x-for="group in foodGroups" :key="group.tier">
                                 <optgroup :label="'Tier ' + group.tier">
@@ -51,22 +57,26 @@
                                 </optgroup>
                             </template>
                         </select>
-                        <input type="number" x-model.number="foodQty" min="1" max="99" class="pf-qty" placeholder="Qty">
-                        <button class="btn btn-sm btn-outline" @click="addFood()" :disabled="!selectedFood">Add</button>
+                        <input type="number" x-model.number="foodQty" min="1" max="99" class="pf-qty" placeholder="Qty" @keydown.enter="addFood()">
+                        <button class="btn btn-sm btn-primary" @click="addFood()" :disabled="!selectedFood">Add</button>
                     </div>
                     <template x-if="pendingFoods.length > 0">
-                        <ul class="pf-list">
+                        <div class="pf-tags">
                             <template x-for="(f, idx) in pendingFoods" :key="idx">
-                                <li class="pf-item">
-                                    <span x-text="f.quantity + 'x ' + f.name"></span>
-                                    <button class="btn btn-sm btn-ghost" @click="removeFood(idx)">✕</button>
-                                </li>
+                                <div class="pf-tag">
+                                    <span class="pf-tag-qty" x-text="f.quantity"></span>
+                                    <span class="pf-tag-name" x-text="f.name"></span>
+                                    <button class="pf-tag-remove" @click="removeFood(idx)" title="Remove">×</button>
+                                </div>
                             </template>
-                        </ul>
+                        </div>
                     </template>
                     <template x-if="boostedParentA">
                         <div class="pf-preview">
-                            <div class="pf-preview-label">Preview after feeding:</div>
+                            <div class="pf-preview-header">
+                                <span class="pf-preview-label">📊 Preview after feeding</span>
+                                <span class="pf-preview-hint">Parent A stats will be stored like this</span>
+                            </div>
                             <div x-html="mountCard(boostedParentA, 'parent_a')"></div>
                         </div>
                     </template>
@@ -235,6 +245,10 @@ function submitForm() {
         get boostedParentA() {
             if (!this.mounts.parent_a || this.pendingFoods.length === 0) return null;
             return applyFoodsToMount(JSON.parse(JSON.stringify(this.mounts.parent_a)), this.pendingFoods);
+        },
+
+        get totalFeeds() {
+            return this.pendingFoods.reduce((sum, f) => sum + (f.quantity || 0), 0);
         },
 
         addFood() {
