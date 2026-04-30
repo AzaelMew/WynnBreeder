@@ -608,11 +608,10 @@ a:hover { text-decoration: underline; }
 .fd-trigger {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.4rem;
+    gap: 0.5rem;
     width: 100%;
     height: 100%;
-    padding: 0.45rem 0.65rem;
+    padding: 0.45rem 0.7rem;
     background: var(--bg3);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -620,10 +619,14 @@ a:hover { text-decoration: underline; }
     font-size: 0.82rem;
     cursor: pointer;
     text-align: left;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
-.fd-trigger:hover { border-color: var(--accent); }
-.fd-trigger-open { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74,158,255,0.12); }
+.fd-trigger:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--border)); background: var(--bg2); }
+.fd-trigger-open { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74,158,255,0.12); background: var(--bg2); }
+.fd-trigger-filled { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.fd-trigger-icon { flex-shrink: 0; color: var(--text-muted); transition: color 0.15s; }
+.fd-trigger-open .fd-trigger-icon,
+.fd-trigger-filled .fd-trigger-icon { color: var(--accent); }
 .fd-trigger-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fd-placeholder { color: var(--text-muted); }
 .fd-chevron { flex-shrink: 0; color: var(--text-muted); transition: transform 0.15s; }
@@ -661,15 +664,21 @@ a:hover { text-decoration: underline; }
 }
 .fd-search::placeholder { color: var(--text-muted); }
 .fd-clear-search {
-    background: none;
-    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 50%;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 1rem;
-    line-height: 1;
-    padding: 0 0.1rem;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background 0.12s, color 0.12s;
 }
-.fd-clear-search:hover { color: var(--text); }
+.fd-clear-search:hover { background: var(--border); color: var(--text); }
 .fd-list {
     max-height: 240px;
     overflow-y: auto;
@@ -692,7 +701,7 @@ a:hover { text-decoration: underline; }
 .fd-option {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.3rem;
     width: 100%;
     padding: 0.38rem 0.65rem;
     background: none;
@@ -706,9 +715,20 @@ a:hover { text-decoration: underline; }
 .fd-option:hover { background: var(--bg3); }
 .fd-option-active { background: rgba(74,158,255,0.1); color: var(--accent); }
 .fd-option-active:hover { background: rgba(74,158,255,0.15); }
+.fd-option-check { width: 14px; flex-shrink: 0; color: var(--accent); display: flex; align-items: center; }
 .fd-option-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fd-option-pts { flex-shrink: 0; color: var(--text-muted); font-size: 0.75rem; margin-left: 0.5rem; }
-.fd-option-active .fd-option-pts { color: var(--accent); opacity: 0.7; }
+.fd-option-pts {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    margin-left: 0.4rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 0.05rem 0.4rem;
+}
+.fd-option-active .fd-option-pts { background: rgba(74,158,255,0.12); border-color: rgba(74,158,255,0.3); color: var(--accent); }
+.fd-add-btn { display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
 
 .pf-select {
     flex: 1;
@@ -747,41 +767,43 @@ a:hover { text-decoration: underline; }
     font-size: 0.78rem;
     padding: 0.2rem 0.5rem;
 }
-.pf-qty {
-    width: 56px;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: textfield;
-    background-color: #18181b;
-    border: 1px solid #3f3f46;
-    border-radius: var(--radius);
-    color: #e4e4e7;
-    font-size: 0.82rem;
-    padding: 0.45rem 0.4rem;
-    text-align: center;
-    line-height: 1.4;
-}
-.pf-qty:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(74,158,255,0.15);
-}
-.pf-qty::-webkit-outer-spin-button,
-.pf-qty::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-.pf-qty {
-    width: 52px;
-    background: var(--bg);
+/* ── Quantity stepper ── */
+.pf-stepper {
+    display: flex;
+    align-items: stretch;
+    background: var(--bg3);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    color: var(--text);
-    font-size: 0.82rem;
-    padding: 0.4rem 0.3rem;
-    text-align: center;
+    overflow: hidden;
+    flex-shrink: 0;
 }
-.pf-qty:focus { outline: none; border-color: var(--accent); }
+.pf-step-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.1s, color 0.1s;
+}
+.pf-step-btn:hover { background: var(--bg2); color: var(--accent); }
+.pf-step-btn:active { background: rgba(74,158,255,0.1); }
+.pf-step-val {
+    min-width: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 0.4rem 0.15rem;
+    user-select: none;
+}
 .pf-tags {
     display: flex;
     flex-wrap: wrap;
@@ -816,17 +838,26 @@ a:hover { text-decoration: underline; }
 }
 .pf-tag-name { font-weight: 500; }
 .pf-tag-remove {
-    background: none;
-    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
     color: var(--text-muted);
-    font-size: 1rem;
-    line-height: 1;
     cursor: pointer;
-    padding: 0 0 0 0.1rem;
-    margin-left: 0.1rem;
-    transition: color 0.15s;
+    padding: 0;
+    margin-left: 0.15rem;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.pf-tag-remove:hover { color: #ff6b6b; }
+.pf-tag-remove:hover {
+    background: rgba(255,107,107,0.2);
+    border-color: rgba(255,107,107,0.4);
+    color: #ff6b6b;
+}
 .pf-preview {
     margin-top: 0.4rem;
     padding-top: 0.6rem;

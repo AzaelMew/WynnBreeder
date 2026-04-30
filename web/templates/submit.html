@@ -48,7 +48,8 @@
                     <p class="pf-desc">Select foods Parent A will eat before breeding. Limits are raised up to maxValue.</p>
                     <div class="pf-add-row">
                         <div class="fd-wrap" @click.outside="fdOpen = false">
-                            <button type="button" class="fd-trigger" @click="fdOpen = !fdOpen; if(fdOpen) $nextTick(() => $refs.fdSearch && $refs.fdSearch.focus())" :class="{ 'fd-trigger-open': fdOpen }">
+                            <button type="button" class="fd-trigger" @click="fdOpen = !fdOpen; if(fdOpen) $nextTick(() => $refs.fdSearch && $refs.fdSearch.focus())" :class="{ 'fd-trigger-open': fdOpen, 'fd-trigger-filled': !!selectedFood }">
+                                <svg class="fd-trigger-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"></path></svg>
                                 <span class="fd-trigger-text" :class="{ 'fd-placeholder': !selectedFood }" x-text="selectedFood || 'Select food…'"></span>
                                 <svg class="fd-chevron" :class="{ 'fd-chevron-open': fdOpen }" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </button>
@@ -56,7 +57,9 @@
                                 <div class="fd-search-wrap">
                                     <svg class="fd-search-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                     <input type="text" class="fd-search" x-model="fdSearch" placeholder="Search food…" x-ref="fdSearch" @keydown.escape="fdOpen = false" autocomplete="off">
-                                    <button x-show="fdSearch" type="button" class="fd-clear-search" @click="fdSearch = ''; $refs.fdSearch.focus()">×</button>
+                                    <button x-show="fdSearch" type="button" class="fd-clear-search" @click="fdSearch = ''; $refs.fdSearch.focus()">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    </button>
                                 </div>
                                 <div class="fd-list">
                                     {{range index .Data "FoodTiers"}}
@@ -68,6 +71,9 @@
                                             x-show="!fdSearch || '{{.Name}}'.toLowerCase().includes(fdSearch.toLowerCase())"
                                             @click="selectedFood = '{{.Name}}'; fdOpen = false; fdSearch = ''"
                                             :class="{ 'fd-option-active': selectedFood === '{{.Name}}' }">
+                                            <span class="fd-option-check">
+                                                <svg x-show="selectedFood === '{{.Name}}'" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                            </span>
                                             <span class="fd-option-name">{{.Name}}</span>
                                             <span class="fd-option-pts">{{.Pts}} pts</span>
                                         </button>
@@ -77,8 +83,19 @@
                                 </div>
                             </div>
                         </div>
-                        <input type="number" x-model.number="foodQty" min="1" max="99" class="pf-qty" placeholder="Qty" @keydown.enter="addFood()">
-                        <button class="btn btn-sm btn-primary" @click="addFood()" :disabled="!selectedFood">Add</button>
+                        <div class="pf-stepper">
+                            <button type="button" class="pf-step-btn" @click="foodQty = Math.max(1, foodQty - 1)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                            <span class="pf-step-val" x-text="foodQty"></span>
+                            <button type="button" class="pf-step-btn" @click="foodQty = Math.min(99, foodQty + 1)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-primary fd-add-btn" @click="addFood()" :disabled="!selectedFood">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add
+                        </button>
                     </div>
                     <template x-if="pendingFoods.length > 0">
                         <div class="pf-tags">
@@ -86,7 +103,9 @@
                                 <div class="pf-tag">
                                     <span class="pf-tag-qty" x-text="f.quantity"></span>
                                     <span class="pf-tag-name" x-text="f.name"></span>
-                                    <button class="pf-tag-remove" @click="removeFood(idx)" title="Remove">×</button>
+                                    <button class="pf-tag-remove" @click="removeFood(idx)" title="Remove">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    </button>
                                 </div>
                             </template>
                         </div>
