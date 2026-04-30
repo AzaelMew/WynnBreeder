@@ -49,7 +49,7 @@
                     <div class="pf-add-row">
                         <div class="fd-wrap" @click.outside="fdOpen = false">
                             <button type="button" class="fd-trigger" @click="fdOpen = !fdOpen; if(fdOpen) $nextTick(() => $refs.fdSearch && $refs.fdSearch.focus())" :class="{ 'fd-trigger-open': fdOpen, 'fd-trigger-filled': !!selectedFood }">
-                                <svg class="fd-trigger-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"></path></svg>
+                                <svg class="fd-trigger-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
                                 <span class="fd-trigger-text" :class="{ 'fd-placeholder': !selectedFood }" x-text="selectedFood || 'Select food…'"></span>
                                 <svg class="fd-chevron" :class="{ 'fd-chevron-open': fdOpen }" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                             </button>

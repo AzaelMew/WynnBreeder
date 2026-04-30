@@ -683,10 +683,15 @@ a:hover { text-decoration: underline; }
     max-height: 240px;
     overflow-y: auto;
     overscroll-behavior: contain;
+    display: block;
 }
 .fd-list::-webkit-scrollbar { width: 4px; }
 .fd-list::-webkit-scrollbar-track { background: transparent; }
 .fd-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.fd-group {
+    display: flex;
+    flex-direction: column;
+}
 .fd-group-label {
     padding: 0.3rem 0.65rem 0.15rem;
     font-size: 0.72rem;
@@ -703,9 +708,11 @@ a:hover { text-decoration: underline; }
     align-items: center;
     gap: 0.3rem;
     width: 100%;
-    padding: 0.38rem 0.65rem;
+    box-sizing: border-box;
+    padding: 0.4rem 0.65rem;
     background: none;
     border: none;
+    border-radius: 0;
     color: var(--text);
     font-size: 0.82rem;
     cursor: pointer;
@@ -720,14 +727,10 @@ a:hover { text-decoration: underline; }
 .fd-option-pts {
     flex-shrink: 0;
     color: var(--text-muted);
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     margin-left: 0.4rem;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 99px;
-    padding: 0.05rem 0.4rem;
 }
-.fd-option-active .fd-option-pts { background: rgba(74,158,255,0.12); border-color: rgba(74,158,255,0.3); color: var(--accent); }
+.fd-option-active .fd-option-pts { color: var(--accent); opacity: 0.7; }
 .fd-add-btn { display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
 
 .pf-select {
