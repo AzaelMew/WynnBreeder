@@ -89,13 +89,19 @@
     </table>
 </section>
 
-<section class="section">
+<section class="section" x-data="{ submitter: '' }">
     <div class="section-header">
         <h2>Export Data</h2>
     </div>
+    <div class="form-row" style="margin-bottom: 1rem;">
+        <div class="form-group">
+            <label>Submitter (optional)</label>
+            <input type="text" x-model="submitter" class="input" placeholder="All users">
+        </div>
+    </div>
     <div class="export-actions">
-        <a href="/api/export?format=json" class="btn btn-sm btn-ghost" download>Download JSON</a>
-        <a href="/api/export?format=csv" class="btn btn-sm btn-ghost" download>Download CSV</a>
+        <a :href="'/api/export?format=json' + (submitter ? '&submitter=' + encodeURIComponent(submitter) : '')" class="btn btn-sm btn-ghost" download>Download JSON</a>
+        <a :href="'/api/export?format=csv' + (submitter ? '&submitter=' + encodeURIComponent(submitter) : '')" class="btn btn-sm btn-ghost" download>Download CSV</a>
     </div>
 </section>
 

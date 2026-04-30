@@ -230,11 +230,22 @@ func (db *DB) DeleteSubmission(id int64) error {
 }
 
 // ListAllSubmissionsWithMounts returns every submission with its mounts loaded.
-func (db *DB) ListAllSubmissionsWithMounts() ([]models.Submission, error) {
-	rows, err := db.Query(`
+// If username is non-empty, only submissions by that user are returned (case-insensitive).
+func (db *DB) ListAllSubmissionsWithMounts(username string) ([]models.Submission, error) {
+	var rows *sql.Rows
+	var err error
+	if username != "" {
+		rows, err = db.Query(`
+SELECT s.id, s.user_id, u.username, s.notes, s.status, s.created_at
+FROM submissions s JOIN users u ON s.user_id = u.id
+WHERE LOWER(u.username) = LOWER(?)
+ORDER BY s.id`, username)
+	} else {
+		rows, err = db.Query(`
 SELECT s.id, s.user_id, u.username, s.notes, s.status, s.created_at
 FROM submissions s JOIN users u ON s.user_id = u.id
 ORDER BY s.id`)
+	}
 	if err != nil {
 		return nil, err
 	}

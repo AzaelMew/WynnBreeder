@@ -284,7 +284,8 @@ func (h *Handler) APIExportSubmissions(w http.ResponseWriter, r *http.Request) {
 		format = "json"
 	}
 
-	subs, err := h.DB.ListAllSubmissionsWithMounts()
+	username := r.URL.Query().Get("submitter")
+	subs, err := h.DB.ListAllSubmissionsWithMounts(username)
 	if err != nil {
 		jsonError(w, "db error: "+err.Error(), http.StatusInternalServerError)
 		return

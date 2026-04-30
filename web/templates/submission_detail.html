@@ -195,8 +195,8 @@ function addOffspring(submissionId) {
             this.loadError = null;
             try {
                 const data = JSON.parse(text.trim());
-                if (!data.type || !data.color || data.potential === undefined) {
-                    throw new Error('Missing required fields (type, color, potential)');
+                if (!data.type || !data.color) {
+                    throw new Error('Missing required fields (type, color)');
                 }
                 if (!data.stats || Object.keys(data.stats).length < 8) {
                     throw new Error('Incomplete stats — expected 8 stat fields');
@@ -206,6 +206,18 @@ function addOffspring(submissionId) {
                 this.loadError = 'Invalid JSON: ' + e.message;
                 this.mount = null;
             }
+        },
+
+        computePotential(m) {
+            if (!m.stats) return 0;
+            return (m.stats.speed?.maxValue || 0)
+                + (m.stats.acceleration?.maxValue || 0)
+                + (m.stats.altitude?.maxValue || 0)
+                + (m.stats.energy?.maxValue || 0)
+                + (m.stats.handling?.maxValue || 0)
+                + (m.stats.toughness?.maxValue || 0)
+                + (m.stats.boost?.maxValue || 0)
+                + (m.stats.training?.maxValue || 0);
         },
 
         mountCard(m) {
@@ -230,7 +242,7 @@ function addOffspring(submissionId) {
             }).join('');
             return `<div class="mount-card" style="border-color:#4aff9f">
                 <div class="mount-card-header"><span class="mount-name">${m.name||'—'}</span><span class="mount-color">${m.color}</span></div>
-                <div class="mount-meta"><span class="mount-type">${m.type}</span><span class="mount-potential">Potential: ${m.potential}</span></div>
+                <div class="mount-meta"><span class="mount-type">${m.type}</span><span class="mount-potential">Potential: ${this.computePotential(m)}</span></div>
                 <div class="mount-energy"><span>Energy: ${m.energy?.value??'?'}/${m.energy?.maxValue??'?'}</span>
                     <div class="stat-bar-bg small"><div class="stat-bar-fill energy-fill" style="width:${energyPct}%"></div></div>
                 </div>
