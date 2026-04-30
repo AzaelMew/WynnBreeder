@@ -598,6 +598,118 @@ a:hover { text-decoration: underline; }
     gap: 0.4rem;
     align-items: stretch;
 }
+
+/* ── Custom food dropdown ── */
+.fd-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+.fd-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    width: 100%;
+    height: 100%;
+    padding: 0.45rem 0.65rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s;
+}
+.fd-trigger:hover { border-color: var(--accent); }
+.fd-trigger-open { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74,158,255,0.12); }
+.fd-trigger-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fd-placeholder { color: var(--text-muted); }
+.fd-chevron { flex-shrink: 0; color: var(--text-muted); transition: transform 0.15s; }
+.fd-chevron-open { transform: rotate(180deg); }
+
+.fd-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    overflow: hidden;
+    min-width: 220px;
+}
+.fd-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+}
+.fd-search-icon { flex-shrink: 0; color: var(--text-muted); }
+.fd-search {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 0.82rem;
+}
+.fd-search::placeholder { color: var(--text-muted); }
+.fd-clear-search {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 0.1rem;
+}
+.fd-clear-search:hover { color: var(--text); }
+.fd-list {
+    max-height: 240px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.fd-list::-webkit-scrollbar { width: 4px; }
+.fd-list::-webkit-scrollbar-track { background: transparent; }
+.fd-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.fd-group-label {
+    padding: 0.3rem 0.65rem 0.15rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--bg2);
+    position: sticky;
+    top: 0;
+}
+.fd-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.38rem 0.65rem;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
+}
+.fd-option:hover { background: var(--bg3); }
+.fd-option-active { background: rgba(74,158,255,0.1); color: var(--accent); }
+.fd-option-active:hover { background: rgba(74,158,255,0.15); }
+.fd-option-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fd-option-pts { flex-shrink: 0; color: var(--text-muted); font-size: 0.75rem; margin-left: 0.5rem; }
+.fd-option-active .fd-option-pts { color: var(--accent); opacity: 0.7; }
+
 .pf-select {
     flex: 1;
     min-width: 0;

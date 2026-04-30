@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -16,17 +17,30 @@ import (
 )
 
 func (h *Handler) SubmitPage(w http.ResponseWriter, r *http.Request) {
-	// Group foods by tier for the template
 	type foodItem struct{ Name, Pts string }
-	foodGroups := make(map[int][]foodItem)
+	type foodTier struct {
+		Tier  int
+		Items []foodItem
+	}
+	tierMap := make(map[int][]foodItem)
 	for _, m := range models.Materials {
 		pts := m.Speed + m.Acceleration + m.Altitude + m.Energy + m.Handling + m.Toughness + m.Boost + m.Training
-		foodGroups[m.Tier] = append(foodGroups[m.Tier], foodItem{Name: m.Name, Pts: strconv.Itoa(pts)})
+		tierMap[m.Tier] = append(tierMap[m.Tier], foodItem{Name: m.Name, Pts: strconv.Itoa(pts)})
+	}
+	// collect unique tiers sorted ascending
+	tiers := make([]int, 0, len(tierMap))
+	for t := range tierMap {
+		tiers = append(tiers, t)
+	}
+	sort.Ints(tiers)
+	foodTiers := make([]foodTier, 0, len(tiers))
+	for _, t := range tiers {
+		foodTiers = append(foodTiers, foodTier{Tier: t, Items: tierMap[t]})
 	}
 	h.render(w, r, "submit.html", PageData{
 		Title: "Submit Breeding",
 		Data: map[string]any{
-			"FoodGroups": foodGroups,
+			"FoodTiers": foodTiers,
 		},
 	})
 }

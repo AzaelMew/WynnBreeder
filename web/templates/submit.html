@@ -47,16 +47,36 @@
                     </div>
                     <p class="pf-desc">Select foods Parent A will eat before breeding. Limits are raised up to maxValue.</p>
                     <div class="pf-add-row">
-                        <select x-model="selectedFood" class="pf-select" @keydown.enter="addFood()">
-                            <option value="">Select food…</option>
-                            {{range $tier, $foods := index .Data "FoodGroups"}}
-                            <optgroup label="Tier {{$tier}}">
-                                {{range $foods}}
-                                <option value="{{.Name}}">{{.Name}} ({{.Pts}} pts)</option>
-                                {{end}}
-                            </optgroup>
-                            {{end}}
-                        </select>
+                        <div class="fd-wrap" @click.outside="fdOpen = false">
+                            <button type="button" class="fd-trigger" @click="fdOpen = !fdOpen; if(fdOpen) $nextTick(() => $refs.fdSearch && $refs.fdSearch.focus())" :class="{ 'fd-trigger-open': fdOpen }">
+                                <span class="fd-trigger-text" :class="{ 'fd-placeholder': !selectedFood }" x-text="selectedFood || 'Select food…'"></span>
+                                <svg class="fd-chevron" :class="{ 'fd-chevron-open': fdOpen }" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="fd-panel" x-show="fdOpen" x-transition.duration.100ms @keydown.escape="fdOpen = false">
+                                <div class="fd-search-wrap">
+                                    <svg class="fd-search-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    <input type="text" class="fd-search" x-model="fdSearch" placeholder="Search food…" x-ref="fdSearch" @keydown.escape="fdOpen = false" autocomplete="off">
+                                    <button x-show="fdSearch" type="button" class="fd-clear-search" @click="fdSearch = ''; $refs.fdSearch.focus()">×</button>
+                                </div>
+                                <div class="fd-list">
+                                    {{range index .Data "FoodTiers"}}
+                                    <div class="fd-group"
+                                        x-show="!fdSearch || [{{range $i, $f := .Items}}{{if $i}},{{end}}'{{$f.Name}}'{{end}}].some(n => n.toLowerCase().includes(fdSearch.toLowerCase()))">
+                                        <div class="fd-group-label">Tier {{.Tier}}</div>
+                                        {{range .Items}}
+                                        <button type="button" class="fd-option"
+                                            x-show="!fdSearch || '{{.Name}}'.toLowerCase().includes(fdSearch.toLowerCase())"
+                                            @click="selectedFood = '{{.Name}}'; fdOpen = false; fdSearch = ''"
+                                            :class="{ 'fd-option-active': selectedFood === '{{.Name}}' }">
+                                            <span class="fd-option-name">{{.Name}}</span>
+                                            <span class="fd-option-pts">{{.Pts}} pts</span>
+                                        </button>
+                                        {{end}}
+                                    </div>
+                                    {{end}}
+                                </div>
+                            </div>
+                        </div>
                         <input type="number" x-model.number="foodQty" min="1" max="99" class="pf-qty" placeholder="Qty" @keydown.enter="addFood()">
                         <button class="btn btn-sm btn-primary" @click="addFood()" :disabled="!selectedFood">Add</button>
                     </div>
@@ -231,6 +251,8 @@ function submitForm() {
         selectedFood: '',
         foodQty: 1,
         pendingFoods: [],
+        fdOpen: false,
+        fdSearch: '',
 
 
 
