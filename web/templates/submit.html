@@ -47,37 +47,16 @@
                     </div>
                     <p class="pf-desc">Select foods Parent A will eat before breeding. Limits are raised up to maxValue.</p>
                     <div class="pf-add-row">
-                        <div class="pf-search-wrap" x-data="{ open: false }" @keydown.escape.window="open = false">
-                            <input
-                                type="text"
-                                x-model="foodSearch"
-                                @focus="open = true"
-                                @click="open = true"
-                                @keydown.enter.prevent="pickFirstFood()"
-                                @keydown.down.prevent="focusFirstFoodResult()"
-                                class="pf-search"
-                                placeholder="Search food…"
-                                autocomplete="off"
-                            >
-                            <template x-if="open && filteredFoods.length > 0">
-                                <div class="pf-results" @click.away="open = false">
-                                    <template x-for="(food, idx) in filteredFoods" :key="food.name">
-                                        <div
-                                            class="pf-result"
-                                            :class="{ 'pf-result-active': idx === 0 }"
-                                            @click="selectFood(food.name); open = false"
-                                            tabindex="0"
-                                        >
-                                            <span class="pf-result-name" x-text="food.name"></span>
-                                            <span class="pf-result-meta">
-                                                <span class="pf-result-tier" x-text="'Tier ' + food.tier"></span>
-                                                <span class="pf-result-pts" x-text="food.pts + ' pts'"></span>
-                                            </span>
-                                        </div>
+                        <select x-model="selectedFood" class="pf-select" @keydown.enter="addFood()">
+                            <option value="">Select food…</option>
+                            <template x-for="group in foodGroups" :key="group.tier">
+                                <optgroup :label="'Tier ' + group.tier">
+                                    <template x-for="food in group.foods" :key="food.name">
+                                        <option :value="food.name" x-text="food.name + ' (' + food.pts + ' pts)'"></option>
                                     </template>
-                                </div>
+                                </optgroup>
                             </template>
-                        </div>
+                        </select>
                         <input type="number" x-model.number="foodQty" min="1" max="99" class="pf-qty" placeholder="Qty" @keydown.enter="addFood()">
                         <button class="btn btn-sm btn-primary" @click="addFood()" :disabled="!selectedFood">Add</button>
                     </div>
@@ -250,39 +229,10 @@ function submitForm() {
         submitSuccess: null,
 
         selectedFood: '',
-        foodSearch: '',
         foodQty: 1,
         pendingFoods: [],
 
-        get allFoods() {
-            return MATERIALS.map(m => ({
-                name: m[1],
-                tier: m[0],
-                pts: m.slice(2).reduce((a,b)=>a+b,0)
-            }));
-        },
 
-        get filteredFoods() {
-            const q = this.foodSearch.trim().toLowerCase();
-            if (!q) return this.allFoods;
-            return this.allFoods.filter(f => f.name.toLowerCase().includes(q));
-        },
-
-        selectFood(name) {
-            this.selectedFood = name;
-            this.foodSearch = name;
-        },
-
-        pickFirstFood() {
-            if (this.filteredFoods.length > 0) {
-                this.selectFood(this.filteredFoods[0].name);
-            }
-        },
-
-        focusFirstFoodResult() {
-            const el = this.$el.querySelector('.pf-result');
-            if (el) el.focus();
-        },
 
         get boostedParentA() {
             if (!this.mounts.parent_a || this.pendingFoods.length === 0) return null;
@@ -303,7 +253,6 @@ function submitForm() {
                 this.pendingFoods.push({ name: this.selectedFood, quantity: qty });
             }
             this.selectedFood = '';
-            this.foodSearch = '';
             this.foodQty = 1;
         },
 
