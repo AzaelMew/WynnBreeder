@@ -32,6 +32,46 @@
             <template x-if="errors.parent_a">
                 <div class="alert alert-error" x-text="errors.parent_a"></div>
             </template>
+
+            <!-- Pending Foods for Parent A -->
+            <template x-if="mounts.parent_a">
+                <div class="pending-foods-section">
+                    <div class="pf-header">
+                        <span class="pf-title">Pending Foods</span>
+                        <span class="pf-hint">Foods raise limits up to maxValue</span>
+                    </div>
+                    <div class="pf-add-row">
+                        <select x-model="selectedFood" class="pf-select">
+                            <option value="">Select food…</option>
+                            <template x-for="group in foodGroups" :key="group.tier">
+                                <optgroup :label="'Tier ' + group.tier">
+                                    <template x-for="food in group.foods" :key="food.name">
+                                        <option :value="food.name" x-text="food.name + ' (' + food.pts + ' pts)'"></option>
+                                    </template>
+                                </optgroup>
+                            </template>
+                        </select>
+                        <input type="number" x-model.number="foodQty" min="1" max="99" class="pf-qty" placeholder="Qty">
+                        <button class="btn btn-sm btn-outline" @click="addFood()" :disabled="!selectedFood">Add</button>
+                    </div>
+                    <template x-if="pendingFoods.length > 0">
+                        <ul class="pf-list">
+                            <template x-for="(f, idx) in pendingFoods" :key="idx">
+                                <li class="pf-item">
+                                    <span x-text="f.quantity + 'x ' + f.name"></span>
+                                    <button class="btn btn-sm btn-ghost" @click="removeFood(idx)">✕</button>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                    <template x-if="boostedParentA">
+                        <div class="pf-preview">
+                            <div class="pf-preview-label">Preview after feeding:</div>
+                            <div x-html="mountCard(boostedParentA, 'parent_a')"></div>
+                        </div>
+                    </template>
+                </div>
+            </template>
         </div>
 
         <!-- Parent B -->
@@ -132,6 +172,43 @@
 </div>
 
 <script>
+// [tier, name, speed, acceleration, altitude, energy, handling, toughness, boost, training]
+const MATERIALS = [
+  [1,"Copper Ingot",0,0,0,4,0,8,0,0],[1,"Copper Gem",4,0,0,2,0,0,0,6],[1,"Oak Plank",2,6,0,0,0,4,0,0],[1,"Oak Paper",0,0,8,0,0,0,4,0],[1,"Wheat String",0,2,0,0,4,0,6,0],[1,"Wheat Grains",8,0,4,0,0,0,0,0],[1,"Gudgeon Oil",0,0,2,0,6,0,0,4],[1,"Gudgeon Meat",0,4,0,8,0,0,0,0],[10,"Granite Ingot",0,0,0,5,0,10,0,0],[10,"Granite Gem",5,0,0,2,0,0,0,8],[10,"Birch Plank",2,8,0,0,0,5,0,0],[10,"Birch Paper",0,0,10,0,0,0,5,0],[10,"Barley String",0,2,0,0,5,0,8,0],[10,"Barley Grains",10,0,5,0,0,0,0,0],[10,"Trout Oil",0,0,2,0,8,0,0,5],[10,"Trout Meat",0,5,0,10,0,0,0,0],[20,"Gold Ingot",0,0,0,5,0,12,0,0],[20,"Gold Gem",6,0,0,3,0,0,0,9],[20,"Willow Plank",3,9,0,0,0,6,0,0],[20,"Willow Paper",0,0,12,0,0,0,5,0],[20,"Oat String",0,3,0,0,6,0,9,0],[20,"Oat Grains",12,0,5,0,0,0,0,0],[20,"Salmon Oil",0,0,3,0,9,0,0,6],[20,"Salmon Meat",0,5,0,12,0,0,0,0],[30,"Sandstone Ingot",0,0,0,6,0,14,0,0],[30,"Sandstone Gem",6,0,0,3,0,0,0,11],[30,"Acacia Plank",3,11,0,0,0,6,0,0],[30,"Acacia Paper",0,0,14,0,0,0,6,0],[30,"Malt String",0,3,0,0,6,0,11,0],[30,"Malt Grains",14,0,6,0,0,0,0,0],[30,"Carp Oil",0,0,3,0,11,0,0,6],[30,"Carp Meat",0,6,0,14,0,0,0,0],[40,"Iron Ingot",0,0,0,6,0,16,0,0],[40,"Iron Gem",7,0,0,3,0,0,0,12],[40,"Spruce Plank",3,12,0,0,0,7,0,0],[40,"Spruce Paper",0,0,16,0,0,0,6,0],[40,"Hops String",0,3,0,0,7,0,12,0],[40,"Hops Grains",16,0,6,0,0,0,0,0],[40,"Icefish Oil",0,0,3,0,12,0,0,7],[40,"Icefish Meat",0,6,0,16,0,0,0,0],[50,"Silver Ingot",0,0,0,7,0,18,0,0],[50,"Silver Gem",8,0,0,4,0,0,0,14],[50,"Jungle Plank",4,14,0,0,0,8,0,0],[50,"Jungle Paper",0,0,18,0,0,0,7,0],[50,"Rye String",0,4,0,0,8,0,14,0],[50,"Rye Grains",18,0,7,0,0,0,0,0],[50,"Piranha Oil",0,0,4,0,14,0,0,8],[50,"Piranha Meat",0,7,0,18,0,0,0,0],[60,"Cobalt Ingot",0,0,0,8,0,20,0,0],[60,"Cobalt Gem",9,0,0,4,0,0,0,15],[60,"Dark Plank",4,15,0,0,0,9,0,0],[60,"Dark Paper",0,0,20,0,0,0,8,0],[60,"Millet String",0,4,0,0,9,0,15,0],[60,"Millet Grains",20,0,8,0,0,0,0,0],[60,"Koi Oil",0,0,4,0,15,0,0,9],[60,"Koi Meat",0,8,0,20,0,0,0,0],[70,"Kanderstone Ingot",0,0,0,8,0,22,0,0],[70,"Kanderstone Gem",10,0,0,4,0,0,0,17],[70,"Light Plank",4,17,0,0,0,10,0,0],[70,"Light Paper",0,0,22,0,0,0,8,0],[70,"Decay String",0,4,0,0,10,0,17,0],[70,"Decay Grains",22,0,8,0,0,0,0,0],[70,"Gylia Oil",0,0,4,0,17,0,0,10],[70,"Gylia Meat",0,8,0,22,0,0,0,0],[80,"Diamond Ingot",0,0,0,9,0,24,0,0],[80,"Diamond Gem",10,0,0,4,0,0,0,18],[80,"Pine Plank",4,18,0,0,0,10,0,0],[80,"Pine Paper",0,0,24,0,0,0,9,0],[80,"Rice String",0,4,0,0,10,0,18,0],[80,"Rice Grains",24,0,9,0,0,0,0,0],[80,"Bass Oil",0,0,4,0,18,0,0,10],[80,"Bass Meat",0,9,0,24,0,0,0,0],[90,"Molten Ingot",0,0,0,9,0,26,0,0],[90,"Molten Gem",11,0,0,5,0,0,0,20],[90,"Avo Plank",5,20,0,0,0,11,0,0],[90,"Avo Paper",0,0,26,0,0,0,9,0],[90,"Sorghum String",0,5,0,0,11,0,20,0],[90,"Sorghum Grains",26,0,9,0,0,0,0,0],[90,"Molten Oil",0,0,5,0,20,0,0,11],[90,"Molten Meat",0,9,0,26,0,0,0,0],[100,"Voidstone Ingot",0,0,0,10,0,28,0,0],[100,"Voidstone Gem",12,0,0,5,0,0,0,21],[100,"Sky Plank",5,21,0,0,0,12,0,0],[100,"Sky Paper",0,0,28,0,0,0,10,0],[100,"Hemp String",0,5,0,0,12,0,21,0],[100,"Hemp Grains",28,0,10,0,0,0,0,0],[100,"Starfish Oil",0,0,5,0,21,0,0,12],[100,"Starfish Meat",0,10,0,28,0,0,0,0],[105,"Dernic Ingot",0,0,0,10,0,29,0,0],[105,"Dernic Gem",12,0,0,5,0,0,0,22],[105,"Dernic Plank",5,22,0,0,0,12,0,0],[105,"Dernic Paper",0,0,29,0,0,0,10,0],[105,"Dernic String",0,5,0,0,12,0,22,0],[105,"Dernic Grains",29,0,10,0,0,0,0,0],[105,"Dernic Oil",0,0,5,0,22,0,0,12],[105,"Dernic Meat",0,10,0,29,0,0,0,0],[110,"Titanium Ingot",0,0,0,11,0,30,0,0],[110,"Titanium Gem",13,0,0,5,0,0,0,23],[110,"Maple Plank",5,23,0,0,0,13,0,0],[110,"Maple Paper",0,0,30,0,0,0,11,0],[110,"Jute String",0,5,0,0,13,0,23,0],[110,"Jute Grains",30,0,11,0,0,0,0,0],[110,"Sturgeon Oil",0,0,5,0,23,0,0,13],[110,"Sturgeon Meat",0,11,0,30,0,0,0,0],[115,"Cinnabar Ingot",0,0,0,11,0,31,0,0],[115,"Cinnabar Gem",13,0,0,5,0,0,0,23],[115,"Redwood Plank",5,23,0,0,0,13,0,0],[115,"Redwood Paper",0,0,31,0,0,0,11,0],[115,"Heather String",0,5,0,0,13,0,23,0],[115,"Heather Grains",31,0,11,0,0,0,0,0],[115,"Mahseer Oil",0,0,5,0,23,0,0,13],[115,"Mahseer Meat",0,11,0,31,0,0,0,0]
+];
+
+const FOOD_BY_NAME = {};
+for (const m of MATERIALS) {
+    FOOD_BY_NAME[m[1]] = m;
+}
+
+function applyFoodsToMount(mount, foods) {
+    let speed=0, accel=0, alt=0, energy=0, handling=0, toughness=0, boost=0, training=0;
+    for (const f of foods) {
+        const mat = FOOD_BY_NAME[f.name];
+        if (!mat) continue;
+        const q = f.quantity || 0;
+        speed     += mat[2] * q;
+        accel     += mat[3] * q;
+        alt       += mat[4] * q;
+        energy    += mat[5] * q;
+        handling  += mat[6] * q;
+        toughness += mat[7] * q;
+        boost     += mat[8] * q;
+        training  += mat[9] * q;
+    }
+    const addLimit = (lim, max, b) => Math.min(lim + b, max);
+    mount.stats.speed.limit        = addLimit(mount.stats.speed.limit,        mount.stats.speed.maxValue,        speed);
+    mount.stats.acceleration.limit = addLimit(mount.stats.acceleration.limit, mount.stats.acceleration.maxValue, accel);
+    mount.stats.altitude.limit     = addLimit(mount.stats.altitude.limit,     mount.stats.altitude.maxValue,     alt);
+    mount.stats.energy.limit       = addLimit(mount.stats.energy.limit,       mount.stats.energy.maxValue,       energy);
+    mount.stats.handling.limit     = addLimit(mount.stats.handling.limit,     mount.stats.handling.maxValue,     handling);
+    mount.stats.toughness.limit    = addLimit(mount.stats.toughness.limit,    mount.stats.toughness.maxValue,    toughness);
+    mount.stats.boost.limit        = addLimit(mount.stats.boost.limit,        mount.stats.boost.maxValue,        boost);
+    mount.stats.training.limit     = addLimit(mount.stats.training.limit,     mount.stats.training.maxValue,     training);
+    return mount;
+}
+
 function submitForm() {
     return {
         mounts: { parent_a: null, parent_b: null, offspring: null },
@@ -140,6 +217,42 @@ function submitForm() {
         submitting: false,
         submitError: null,
         submitSuccess: null,
+
+        selectedFood: '',
+        foodQty: 1,
+        pendingFoods: [],
+
+        get foodGroups() {
+            const groups = {};
+            for (const m of MATERIALS) {
+                if (!groups[m[0]]) groups[m[0]] = [];
+                const pts = m.slice(2).reduce((a,b)=>a+b,0);
+                groups[m[0]].push({ name: m[1], pts });
+            }
+            return Object.keys(groups).sort((a,b)=>+a-+b).map(t => ({ tier: t, foods: groups[t] }));
+        },
+
+        get boostedParentA() {
+            if (!this.mounts.parent_a || this.pendingFoods.length === 0) return null;
+            return applyFoodsToMount(JSON.parse(JSON.stringify(this.mounts.parent_a)), this.pendingFoods);
+        },
+
+        addFood() {
+            if (!this.selectedFood) return;
+            const qty = Math.max(1, Math.min(99, Math.floor(this.foodQty || 1)));
+            const existing = this.pendingFoods.find(f => f.name === this.selectedFood);
+            if (existing) {
+                existing.quantity += qty;
+            } else {
+                this.pendingFoods.push({ name: this.selectedFood, quantity: qty });
+            }
+            this.selectedFood = '';
+            this.foodQty = 1;
+        },
+
+        removeFood(idx) {
+            this.pendingFoods.splice(idx, 1);
+        },
 
         parentsLoaded() { return this.mounts.parent_a && this.mounts.parent_b; },
         allLoaded() { return this.mounts.parent_a && this.mounts.parent_b && this.mounts.offspring; },
@@ -234,6 +347,7 @@ function submitForm() {
             this.submitSuccess = null;
             try {
                 const body = { parent_a: this.mounts.parent_a, parent_b: this.mounts.parent_b, notes: this.notes };
+                if (this.pendingFoods.length > 0) body.pending_foods = this.pendingFoods;
                 if (includeOffspring && this.mounts.offspring) body.offspring = this.mounts.offspring;
                 const res = await fetch('/api/submissions', {
                     method: 'POST',

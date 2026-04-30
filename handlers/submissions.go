@@ -154,6 +154,13 @@ func (h *Handler) APICreateSubmission(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(req.PendingFoods) > 0 {
+		if err := models.ApplyFoods(&req.ParentA, req.PendingFoods); err != nil {
+			jsonError(w, "invalid pending foods: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	mounts := []models.Mount{
 		models.MountFromJSON(req.ParentA, 0, models.RoleParentA),
 		models.MountFromJSON(req.ParentB, 0, models.RoleParentB),

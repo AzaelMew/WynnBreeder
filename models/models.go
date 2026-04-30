@@ -168,10 +168,11 @@ func MountFromJSON(mj MountJSON, submissionID int64, role MountRole) Mount {
 }
 
 type SubmitRequest struct {
-	ParentA   MountJSON  `json:"parent_a"`
-	ParentB   MountJSON  `json:"parent_b"`
-	Offspring *MountJSON `json:"offspring"` // nil = save as pending (breed in progress)
-	Notes     string     `json:"notes"`
+	ParentA      MountJSON     `json:"parent_a"`
+	ParentB      MountJSON     `json:"parent_b"`
+	Offspring    *MountJSON    `json:"offspring"` // nil = save as pending (breed in progress)
+	PendingFoods []PendingFood `json:"pending_foods"`
+	Notes        string        `json:"notes"`
 }
 
 // StatRow used in analytics tables
