@@ -598,17 +598,70 @@ a:hover { text-decoration: underline; }
     gap: 0.4rem;
     align-items: stretch;
 }
-.pf-select {
+.pf-search-wrap {
     flex: 1;
+    position: relative;
     min-width: 0;
+}
+.pf-search {
+    width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--text);
     font-size: 0.82rem;
-    padding: 0.4rem 0.5rem;
+    padding: 0.4rem 0.6rem;
 }
-.pf-select:focus { outline: none; border-color: var(--accent); }
+.pf-search:focus { outline: none; border-color: var(--accent); }
+.pf-results {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    z-index: 50;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.pf-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.82rem;
+    gap: 0.5rem;
+    transition: background 0.1s;
+}
+.pf-result:hover, .pf-result-active {
+    background: rgba(74,158,255,0.12);
+}
+.pf-result-name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pf-result-meta {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+.pf-result-tier {
+    font-size: 0.7rem;
+    background: var(--bg3);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    color: var(--text-muted);
+}
+.pf-result-pts {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
 .pf-qty {
     width: 52px;
     background: var(--bg);
